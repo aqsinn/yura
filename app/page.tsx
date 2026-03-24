@@ -64,7 +64,7 @@ export default function LandingPage() {
           initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
           className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black tracking-[0.2em] text-purple-400 mb-12 shadow-inner"
         >
-          <Stars size={14} className="animate-spin" style={{ animationDuration: '4s' }} />
+          <Stars size={13} className="animate-spin" style={{ animationDuration: '4s' }} />
           <span>{projectCount.toLocaleString()} ACTIVE BUILDERS ON PLATFORM</span>
         </motion.div>
         
