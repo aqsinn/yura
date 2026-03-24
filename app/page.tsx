@@ -157,7 +157,7 @@ export default function LandingPage() {
       'CARBON FIBER STACK', 'BRUTE FORCE', 'PEER DESTRUCTION', 'GOD PROTOCOL', 
       'TOTAL DOMINANCE', 'SHADOW DEPLOY', 'LETHAL ARCH', 'STEROID OPS'
     ].map((t) => (
-      <span key={`${t}-2`} className="text-4xl md:text-8xl font-black text-white/[0.03] uppercase italic tracking-tighter">
+      <span key={`${t}-2`} className="text-4xl md:text-8xl font-black text-white/[0.12] uppercase italic tracking-tighter">
         {t}
       </span>
     ))}
