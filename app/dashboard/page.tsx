@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutGrid, PlusSquare, Bell, User, Search, 
-  Send, CheckCircle, Flame, Clock, Filter, Paperclip 
+  Send, CheckCircle, Flame, Clock, Filter, Paperclip,
+  Rocket, Zap, ChevronRight, Target, Share2, Users2, // FIXED: Added Users2 to imports
+  Terminal, Globe, Cpu, ShieldCheck
 } from 'lucide-react';
 
 // --- Types ---
@@ -16,6 +19,7 @@ type Project = {
   interested: string[];
   selected: string[];
   timestamp: Date;
+  status?: 'trending' | 'new' | 'matching';
 };
 
 // --- Mock Data ---
@@ -24,206 +28,263 @@ const MOCK_PROJECTS: Project[] = [
     id: '1',
     title: "AI-Powered Gardening App",
     creator: "Alex Rivers",
-    description: "Looking for someone to help with the computer vision model to identify pests via camera feed.",
+    description: "Building a computer vision model to identify plant pests via live camera feed. Need a specialist in TensorFlow and React Native to bridge the gap.",
     skills: ["Python", "TensorFlow", "React Native"],
     interested: ["Sarah_Dev", "Mike_Code"],
     selected: [],
-    timestamp: new Date()
+    timestamp: new Date(),
+    status: 'matching'
   },
   {
     id: '2',
     title: "Yura Platform Redesign",
     creator: "Admin",
-    description: "We need a UI/UX expert to refine the contributor selection flow.",
+    description: "We are refining the contributor selection flow. Seeking a UI/UX expert who understands high-density developer interfaces.",
     skills: ["Figma", "Tailwind CSS", "Next.js"],
     interested: ["Julian_Designer"],
     selected: ["Julian_Designer"],
-    timestamp: new Date()
+    timestamp: new Date(),
+    status: 'trending'
   }
 ];
 
 export default function YuraApp() {
   const [activeTab, setActiveTab] = useState<'Feed' | 'Create' | 'Notifications' | 'Profile'>('Feed');
-  const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
-  const [userSkills] = useState(["Next.js", "Tailwind CSS"]); // Mock logged-in user skills
-  const [searchQuery, setSearchQuery] = useState("");
+  const [projects] = useState<Project[]>(MOCK_PROJECTS);
+  const [userSkills] = useState(["Next.js", "Tailwind CSS"]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Filter projects based on "Skill Matching"
+  useEffect(() => setIsLoaded(true), []);
+
   const suggestedProjects = projects.filter(p => 
     p.skills.some(skill => userSkills.includes(skill))
   );
 
+  if (!isLoaded) return null;
+
   return (
-    <main className="flex min-h-screen bg-[#0A0A0A] text-gray-100 font-sans selection:bg-purple-500/30">
+    <main className="flex min-h-screen bg-[#050505] text-white font-sans selection:bg-purple-500/30 overflow-hidden">
       
       {/* --- Sidebar Navigation --- */}
-      <nav className="w-64 border-r border-white/10 flex flex-col p-6 fixed h-full bg-[#0A0A0A]">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent mb-10">
-          Yura
-        </h1>
+      <nav className="w-72 border-r border-white/5 flex flex-col p-8 fixed h-full bg-[#080808]/50 backdrop-blur-xl z-50">
+        <div className="flex items-center gap-3 mb-12 group cursor-pointer">
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+            <Rocket size={20} className="text-black" />
+          </div>
+          <span className="text-2xl font-black tracking-tighter uppercase">Yura</span>
+        </div>
         
-        <div className="space-y-2 flex-1">
-          <NavItem icon={<LayoutGrid size={20}/>} label="Menu" active={activeTab === 'Feed'} onClick={() => setActiveTab('Feed')} />
+        <div className="space-y-3 flex-1">
+          <NavItem icon={<LayoutGrid size={20}/>} label="Feed" active={activeTab === 'Feed'} onClick={() => setActiveTab('Feed')} />
           <NavItem icon={<PlusSquare size={20}/>} label="Create" active={activeTab === 'Create'} onClick={() => setActiveTab('Create')} />
-          <NavItem icon={<Bell size={20}/>} label="Notifications" active={activeTab === 'Notifications'} onClick={() => setActiveTab('Notifications')} />
-          <NavItem icon={<User size={20}/>} label="Profile" active={activeTab === 'Profile'} onClick={() => setActiveTab('Profile')} />
+          <NavItem icon={<Bell size={20}/>} label="Inbox" active={activeTab === 'Notifications'} onClick={() => setActiveTab('Notifications')} />
+          <NavItem icon={<User size={20}/>} label="Identity" active={activeTab === 'Profile'} onClick={() => setActiveTab('Profile')} />
         </div>
 
-        <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-          <p className="text-xs text-gray-500 mb-2">Logged in as</p>
-          <p className="text-sm font-medium">Dev_Dudeman</p>
-        </div>
+        {/* User Card */}
+        <motion.div 
+          whileHover={{ scale: 1.02 }}
+          className="p-5 bg-gradient-to-br from-white/10 to-transparent rounded-[2rem] border border-white/10 backdrop-blur-sm mt-auto"
+        >
+          <div className="flex items-center gap-3 mb-3">
+             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-blue-400" />
+             <div>
+                <p className="text-[10px] font-black text-gray-500 tracking-widest uppercase leading-none mb-1">Operator</p>
+                <p className="text-sm font-bold leading-none">Dev_Dudeman</p>
+             </div>
+          </div>
+          <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+             <motion.div initial={{ width: 0 }} animate={{ width: '65%' }} className="h-full bg-purple-500" />
+          </div>
+        </motion.div>
       </nav>
 
       {/* --- Main Content Area --- */}
-      <section className="ml-64 flex-1 overflow-y-auto p-8">
-        <div className="max-w-4xl mx-auto">
+      <section className="ml-72 flex-1 overflow-y-auto relative custom-scrollbar">
+        {/* Background Gradients */}
+        <div className="fixed top-0 right-0 w-[600px] h-[600px] bg-purple-600/5 blur-[140px] pointer-events-none" />
+        <div className="fixed bottom-0 left-0 w-[400px] h-[400px] bg-blue-600/5 blur-[120px] pointer-events-none" />
+        
+        <div className="max-w-5xl mx-auto px-12 py-16">
           
-          {/* Header / Hero Context */}
-          <header className="mb-10 flex justify-between items-end">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">
-                {activeTab === 'Feed' && "Project Feed"}
-                {activeTab === 'Create' && "Launch a Project"}
-                {activeTab === 'Notifications' && "Inbox"}
-                {activeTab === 'Profile' && "Your Identity"}
+          <header className="mb-12 flex justify-between items-end">
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+              <h2 className="text-5xl font-black tracking-tighter mb-2 uppercase italic">
+                {activeTab === 'Feed' && "The Feed"}
+                {activeTab === 'Create' && "Launch Vision"}
+                {activeTab === 'Notifications' && "Signal Center"}
+                {activeTab === 'Profile' && "Bio-Data"}
               </h2>
-              <p className="text-gray-400">
-                {activeTab === 'Feed' && "Find projects that match your stack."}
+              <p className="text-gray-500 font-medium text-lg">
+                {activeTab === 'Feed' && "The network is live. Find your squad."}
+                {activeTab === 'Create' && "Deploy your next big project to the feed."}
               </p>
-            </div>
+            </motion.div>
             
             {activeTab === 'Feed' && (
-              <div className="flex gap-2">
-                <button className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-lg border border-white/10 text-sm hover:bg-white/10 transition">
-                  <Flame size={16} className="text-orange-500"/> Trending
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-lg border border-white/10 text-sm hover:bg-white/10 transition">
-                  <Clock size={16} className="text-blue-500"/> Newest
-                </button>
+              <div className="flex gap-3">
+                <FilterButton icon={<Flame size={16} className="text-orange-500"/>} label="Trending" />
+                <FilterButton icon={<Clock size={16} className="text-blue-500"/>} label="Latest" />
               </div>
             )}
           </header>
 
-          {/* --- Tab Content Switcher --- */}
-          {activeTab === 'Feed' && (
-            <div className="space-y-6">
-              {/* Skill Matching Alert */}
-              <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex items-center justify-between">
-                <div>
-                  <p className="text-purple-300 font-medium">Matched for you</p>
-                  <p className="text-sm text-purple-200/60">We found {suggestedProjects.length} projects seeking your skills.</p>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              {activeTab === 'Feed' && (
+                <div className="space-y-8">
+                  {/* Neural Match Alert */}
+                  <motion.div 
+                    whileHover={{ scale: 1.01 }}
+                    className="p-8 bg-purple-600/10 border border-purple-500/20 rounded-[2.5rem] flex items-center justify-between group overflow-hidden relative shadow-2xl"
+                  >
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
+                        <Zap size={100} className="text-purple-500" />
+                    </div>
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-2">
+                         <Target size={18} className="text-purple-400" />
+                         <p className="text-purple-300 font-black text-xs tracking-widest uppercase">Neural Match</p>
+                      </div>
+                      <p className="text-2xl font-bold">Found {suggestedProjects.length} high-affinity projects.</p>
+                      <p className="text-purple-200/50 mt-1 font-medium italic">Optimized for your Next.js expertise.</p>
+                    </div>
+                    <button className="relative z-10 px-6 py-3 bg-purple-500 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-purple-500/20 hover:brightness-110 transition active:scale-95">
+                      Sync Now
+                    </button>
+                  </motion.div>
+
+                  <div className="grid grid-cols-1 gap-6 pb-20">
+                    {projects.map((project, i) => (
+                      <ProjectCard key={project.id} project={project} index={i} />
+                    ))}
+                  </div>
                 </div>
-                <div className="flex -space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-purple-500 border-2 border-[#0A0A0A] flex items-center justify-center text-xs">JS</div>
-                  <div className="w-8 h-8 rounded-full bg-blue-500 border-2 border-[#0A0A0A] flex items-center justify-center text-xs">TS</div>
+              )}
+
+              {activeTab === 'Create' && <CreateProjectForm onCreated={() => setActiveTab('Feed')} />}
+              
+              {activeTab === 'Profile' && <ProfileView skills={userSkills} />}
+
+              {activeTab === 'Notifications' && (
+                <div className="space-y-4 max-w-2xl">
+                  <NotificationItem text="Julian_Designer applied to 'Yura Redesign'" time="2m ago" type="join" />
+                  <NotificationItem text="Your skill 'React' was peer-verified" time="1h ago" type="verify" />
+                  <NotificationItem text="Project 'AI-Garden' is now trending" time="4h ago" type="alert" />
                 </div>
-              </div>
-
-              {/* Infinite-style Scroll Feed */}
-              <div className="space-y-4">
-                {projects.map(project => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'Create' && <CreateProjectForm onCreated={() => setActiveTab('Feed')} />}
-          
-          {activeTab === 'Profile' && <ProfileView skills={userSkills} />}
-
-          {activeTab === 'Notifications' && (
-            <div className="space-y-4">
-              <NotificationItem text="Julian_Designer joined 'Yura Redesign'" time="2m ago" />
-              <NotificationItem text="Your skill 'React' was verified by 3 peers" time="1h ago" />
-            </div>
-          )}
-
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </section>
     </main>
   );
 }
 
-// --- Sub-Components ---
+// --- Internal Components ---
 
 function NavItem({ icon, label, active, onClick }: any) {
   return (
     <button 
       onClick={onClick}
-      className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${
-        active ? 'bg-white text-black font-semibold' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+      className={`relative w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 group overflow-hidden ${
+        active ? 'bg-white text-black font-black' : 'text-gray-500 hover:text-white hover:bg-white/5'
       }`}
     >
-      {icon}
-      <span>{label}</span>
+      {active && <motion.div layoutId="nav-bg" className="absolute inset-0 bg-white" />}
+      <span className="relative z-10">{icon}</span>
+      <span className="relative z-10 uppercase text-[10px] font-black tracking-[0.2em]">{label}</span>
+      {!active && <ChevronRight size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />}
     </button>
   );
 }
 
-function ProjectCard({ project }: { project: Project }) {
+function ProjectCard({ project, index }: { project: Project, index: number }) {
   return (
-    <div className="p-6 bg-[#121212] border border-white/5 rounded-2xl hover:border-white/20 transition group">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-xl font-bold group-hover:text-purple-400 transition">{project.title}</h3>
-          <p className="text-sm text-gray-500">Posted by @{project.creator}</p>
+    <motion.div 
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.1 }}
+      className="p-10 bg-white/[0.02] border border-white/5 rounded-[3rem] hover:bg-white/[0.04] hover:border-purple-500/30 transition-all duration-500 group relative overflow-hidden"
+    >
+      <div className="flex justify-between items-start mb-8 relative z-10">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-3">
+             <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-black text-gray-500 tracking-widest uppercase">@{project.creator}</span>
+             {project.status === 'trending' && <span className="flex items-center gap-1 text-[10px] font-black text-orange-500 tracking-widest uppercase"><Flame size={12}/> Trending</span>}
+          </div>
+          <h3 className="text-3xl font-black group-hover:text-purple-400 transition-colors uppercase italic tracking-tighter leading-none">{project.title}</h3>
         </div>
-        <button className="px-4 py-2 bg-white text-black text-sm font-bold rounded-lg hover:bg-gray-200 transition">
-          Join Project
+        <button className="px-8 py-4 bg-white text-black text-[10px] font-black tracking-widest uppercase rounded-2xl hover:bg-purple-500 hover:text-white transition-all shadow-xl active:scale-95">
+          Join Squad
         </button>
       </div>
       
-      <p className="text-gray-400 mb-6 leading-relaxed">
+      <p className="text-gray-400 mb-8 leading-relaxed font-medium text-lg max-w-3xl relative z-10">
         {project.description}
       </p>
 
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-10 relative z-10">
         {project.skills.map(skill => (
-          <span key={skill} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-gray-300">
+          <span key={skill} className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black tracking-widest text-gray-400 group-hover:text-white transition-colors uppercase">
             {skill}
           </span>
         ))}
       </div>
 
-      <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Paperclip size={14} />
-          <span>2 Attachments</span>
+      <div className="pt-8 border-t border-white/5 flex items-center justify-between text-[10px] font-black tracking-[0.2em] text-gray-600 uppercase relative z-10">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Paperclip size={14} /> 2 Assets
+          </div>
+          <div className="flex items-center gap-2">
+            <Users2 size={14} /> {project.interested.length} Interested
+          </div>
         </div>
-        <div className="text-sm text-gray-500">
-          {project.interested.length} People interested
-        </div>
+        <div className="group-hover:text-purple-500 transition-colors cursor-pointer">Manifesto →</div>
       </div>
-    </div>
+    </motion.div>
+  );
+}
+
+function FilterButton({ icon, label }: any) {
+  return (
+    <button className="flex items-center gap-2 px-6 py-3 bg-white/5 rounded-2xl border border-white/10 text-[10px] font-black tracking-widest uppercase hover:bg-white/10 transition-all active:scale-95">
+      {icon} {label}
+    </button>
   );
 }
 
 function CreateProjectForm({ onCreated }: any) {
   return (
-    <div className="bg-[#121212] border border-white/5 p-8 rounded-3xl space-y-6">
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-400">Project Title</label>
-        <input className="w-full bg-white/5 border border-white/10 rounded-xl p-3 focus:border-purple-500 outline-none transition" placeholder="e.g. Decentralized Coffee Tracker" />
+    <div className="bg-white/[0.02] border border-white/5 p-12 rounded-[4rem] max-w-3xl mx-auto space-y-10 shadow-2xl">
+      <div className="space-y-4">
+        <label className="text-[10px] font-black tracking-[0.3em] text-gray-600 uppercase ml-2">Manifesto Title</label>
+        <input className="w-full bg-white/5 border border-white/10 rounded-[2rem] p-7 text-xl font-bold focus:border-purple-500 outline-none transition placeholder:text-gray-800" placeholder="e.g. DECENTRALIZED COFFEE TRACKER" />
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-400">Required Skills (Multi-select)</label>
-        <div className="flex flex-wrap gap-2 p-3 bg-white/5 border border-white/10 rounded-xl">
-          {["React", "Solidity", "Tailwind", "Node.js"].map(s => (
-            <button key={s} className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-md text-sm border border-purple-500/30">+{s}</button>
+      <div className="space-y-4">
+        <label className="text-[10px] font-black tracking-[0.3em] text-gray-600 uppercase ml-2">Stack Requirements</label>
+        <div className="flex flex-wrap gap-3 p-6 bg-white/5 border border-white/10 rounded-[2rem]">
+          {["React", "Solidity", "Tailwind", "Node.js", "Python", "Rust"].map(s => (
+            <button key={s} className="px-5 py-2 bg-purple-500/10 text-purple-400 rounded-xl text-[10px] font-black border border-purple-500/20 hover:bg-purple-500 hover:text-white transition-all uppercase tracking-widest">+{s}</button>
           ))}
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-400">Description</label>
-        <textarea rows={4} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 focus:border-purple-500 outline-none transition" placeholder="Tell the dudes what this is about..." />
+      <div className="space-y-4">
+        <label className="text-[10px] font-black tracking-[0.3em] text-gray-600 uppercase ml-2">Mission Briefing</label>
+        <textarea rows={5} className="w-full bg-white/5 border border-white/10 rounded-[2rem] p-7 text-lg font-medium focus:border-purple-500 outline-none transition placeholder:text-gray-800" placeholder="Break down the vision..." />
       </div>
 
-      <button onClick={onCreated} className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition">
-        Post Project to Feed
+      <button onClick={onCreated} className="w-full py-8 bg-white text-black font-black text-xl rounded-[2rem] hover:bg-purple-500 hover:text-white transition-all shadow-2xl shadow-purple-500/10 uppercase tracking-tighter italic">
+        Deploy to Global Feed
       </button>
     </div>
   );
@@ -231,44 +292,78 @@ function CreateProjectForm({ onCreated }: any) {
 
 function ProfileView({ skills }: { skills: string[] }) {
   return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-6">
-        <div className="w-24 h-24 bg-gradient-to-tr from-purple-600 to-blue-500 rounded-3xl flex items-center justify-center text-4xl">
+    <div className="space-y-12">
+      <div className="flex items-center gap-10 p-10 bg-white/[0.02] border border-white/5 rounded-[3.5rem] shadow-xl">
+        <div className="w-32 h-32 bg-gradient-to-tr from-purple-600 to-blue-500 rounded-[2.5rem] flex items-center justify-center text-5xl shadow-2xl">
           👨‍💻
         </div>
         <div>
-          <h3 className="text-2xl font-bold">Dev_Dudeman</h3>
-          <p className="text-gray-400">Full Stack Engineer • 12 Projects Joined</p>
-          <button className="mt-2 text-sm text-purple-400 hover:underline">Edit Public Profile</button>
+          <h3 className="text-5xl font-black tracking-tighter italic uppercase mb-2">Dev_Dudeman</h3>
+          <p className="text-gray-500 font-bold text-lg uppercase tracking-tight">Full Stack Engineer • <span className="text-white">12 Projects Joined</span></p>
+          <div className="flex gap-4 mt-6">
+             <button className="px-6 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black tracking-widest uppercase hover:bg-white/10 transition">Edit Profile</button>
+             <button className="px-6 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black tracking-widest uppercase hover:bg-white/10 transition flex items-center gap-2"><Share2 size={12}/> Share Identity</button>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        <div className="p-6 bg-white/5 rounded-2xl border border-white/10">
-          <h4 className="font-bold mb-4 flex items-center gap-2">
-            <CheckCircle size={18} className="text-green-500"/> Verified Skills
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            {skills.map(s => <span key={s} className="px-3 py-1 bg-white/10 rounded-lg text-sm">{s}</span>)}
-            <button className="px-3 py-1 border border-dashed border-white/20 rounded-lg text-sm text-gray-500">+ Add Skill</button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <StatsCard icon={<ShieldCheck size={18} className="text-green-500"/>} title="Verified Stack">
+          <div className="flex flex-wrap gap-3 mt-4">
+            {skills.map(s => <span key={s} className="px-5 py-3 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-300">{s}</span>)}
+            <button className="px-5 py-3 border border-dashed border-white/20 rounded-2xl text-[10px] font-black text-gray-600 hover:border-white/40 transition-colors uppercase tracking-widest">+ Add</button>
           </div>
-        </div>
+        </StatsCard>
         
-        <div className="p-6 bg-white/5 rounded-2xl border border-white/10">
-          <h4 className="font-bold mb-4">Reputation</h4>
-          <div className="text-3xl font-bold italic text-white/40">LEVEL 14</div>
-          <p className="text-xs text-gray-500 mt-2">Next level at 1,500 XP</p>
+        <div className="p-10 bg-white/[0.02] rounded-[3rem] border border-white/5 flex flex-col justify-between shadow-xl">
+          <div>
+             <h4 className="font-black text-[10px] tracking-[0.3em] mb-2 uppercase text-gray-600">Reputation Tier</h4>
+             <div className="text-6xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">LVL 14</div>
+          </div>
+          <div className="mt-8">
+             <div className="flex justify-between text-[10px] font-black tracking-widest text-gray-600 uppercase mb-2">
+                <span>1,240 XP</span>
+                <span>Next: 1,500 XP</span>
+             </div>
+             <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                <motion.div initial={{ width: 0 }} animate={{ width: '82%' }} className="h-full bg-gradient-to-r from-purple-500 to-blue-500" />
+             </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function NotificationItem({ text, time }: { text: string, time: string }) {
+function NotificationItem({ text, time, type }: { text: string, time: string, type: 'join' | 'verify' | 'alert' }) {
   return (
-    <div className="p-4 bg-white/5 border border-white/5 rounded-xl flex justify-between items-center">
-      <p className="text-sm">{text}</p>
-      <span className="text-xs text-gray-500">{time}</span>
-    </div>
+    <motion.div 
+      whileHover={{ x: 10 }}
+      className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl flex justify-between items-center group cursor-pointer hover:bg-white/[0.05]"
+    >
+      <div className="flex items-center gap-4">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+            type === 'join' ? 'bg-blue-500/20 text-blue-400' : 
+            type === 'verify' ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'
+        }`}>
+            {type === 'join' && <Users2 size={18} />}
+            {type === 'verify' && <CheckCircle size={18} />}
+            {type === 'alert' && <Bell size={18} />}
+        </div>
+        <p className="font-bold text-gray-400 group-hover:text-white transition-colors uppercase text-sm tracking-tight">{text}</p>
+      </div>
+      <span className="text-[10px] font-black tracking-widest text-gray-700 uppercase">{time}</span>
+    </motion.div>
   );
+}
+
+function StatsCard({ icon, title, children }: any) {
+    return (
+        <div className="p-10 bg-white/[0.02] rounded-[3rem] border border-white/5 shadow-xl">
+          <h4 className="font-black text-[10px] tracking-[0.3em] mb-6 flex items-center gap-3 uppercase text-gray-600">
+            {icon} {title}
+          </h4>
+          {children}
+        </div>
+    )
 }
