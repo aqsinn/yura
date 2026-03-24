@@ -139,17 +139,30 @@ export default function LandingPage() {
       </section>
 
       {/* --- Marquee --- */}
-      <div className="relative py-12 md:py-20 border-y border-white/5 overflow-hidden">
-        <div className="flex gap-8 md:gap-16 whitespace-nowrap animate-marquee">
-          {['TYPESCRIPT', 'NEXT.JS', 'MONGODB', 'TAILWIND', 'PYTHON', 'AI', 'WEB3', 'FIGMA', 'NODE.JS', 'RUST'].map((t) => (
-            <span key={t} className="text-4xl md:text-6xl font-black text-white/5 hover:text-white/20 transition-colors cursor-default uppercase italic">{t}</span>
-          ))}
-          {/* Duplicate for seamless loop */}
-          {['TYPESCRIPT', 'NEXT.JS', 'MONGODB', 'TAILWIND', 'PYTHON', 'AI', 'WEB3', 'FIGMA', 'NODE.JS', 'RUST'].map((t) => (
-            <span key={`${t}-2`} className="text-4xl md:text-6xl font-black text-white/5 uppercase italic">{t}</span>
-          ))}
-        </div>
-      </div>
+     {/* --- Marquee --- */}
+<div className="relative py-12 md:py-20 border-y border-white/5 overflow-hidden">
+  <div className="flex gap-8 md:gap-16 whitespace-nowrap animate-marquee">
+    {[
+      'VIOLENT REFACTOR', 'LATENCY KILLER', 'ZERO MERCY', 'HOSTILE TAKEOVER', 
+      'CARBON FIBER STACK', 'BRUTE FORCE', 'PEER DESTRUCTION', 'GOD PROTOCOL', 
+      'TOTAL DOMINANCE', 'SHADOW DEPLOY', 'LETHAL ARCH', 'STEROID OPS'
+    ].map((t) => (
+      <span key={t} className="text-4xl md:text-8xl font-black text-white/[0.03] hover:text-purple-500/40 transition-all duration-300 cursor-default uppercase italic tracking-tighter">
+        {t}
+      </span>
+    ))}
+    {/* Duplicate for seamless loop */}
+    {[
+      'VIOLENT REFACTOR', 'LATENCY KILLER', 'ZERO MERCY', 'HOSTILE TAKEOVER', 
+      'CARBON FIBER STACK', 'BRUTE FORCE', 'PEER DESTRUCTION', 'GOD PROTOCOL', 
+      'TOTAL DOMINANCE', 'SHADOW DEPLOY', 'LETHAL ARCH', 'STEROID OPS'
+    ].map((t) => (
+      <span key={`${t}-2`} className="text-4xl md:text-8xl font-black text-white/[0.03] uppercase italic tracking-tighter">
+        {t}
+      </span>
+    ))}
+  </div>
+</div>
 
       {/* --- Final CTA --- */}
       <section className="py-24 md:py-40 px-6 text-center relative">
