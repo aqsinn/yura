@@ -1,7 +1,18 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { LayoutGrid, SquarePlus, Bell, User, Compass, Rocket } from 'lucide-react'
+import { createClient } from '@/utils/supabase/server'
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login')
+  }
+
   const navItems = [
     { name: 'Feed', href: '/feed', icon: LayoutGrid },
     { name: 'Create', href: '/projects/create', icon: SquarePlus },
