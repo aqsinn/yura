@@ -1,194 +1,89 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState, useRef, useSyncExternalStore } from 'react'
+import Link from 'next/link'
+import { MessageCircle } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
-import Avatar from '@/app/components/common/Avatar'
-import { Send } from 'lucide-react'
 
-type Message = {
-  id: string
-  content: string
-  sender_id: string
-  created_at: string
-}
+const emptySubscribe = () => () => {}
+const getSnapshot = () => true
 
-export default function ChatUI({
-  conversationId,
-  otherUser,
-  currentUserId,
-  initialMessages,
-}: {
-  conversationId: string | null
-  otherUser: { id: string; full_name: string | null; avatar_url: string | null }
-  currentUserId: string
-  currentUserName?: string | null
-  initialMessages: Message[]
-}) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
-  const [newMessage, setNewMessage] = useState('')
-  const [sending, setSending] = useState(false)
-  const [convId, setConvId] = useState(conversationId)
-  const bottomRef = useRef<HTMLDivElement>(null)
-  const supabase = createClient()
+export default function MessagesNavItem() {
+  const [unreadCount, setUnreadCount] = useState(0)
+  const isMounted = useSyncExternalStore(emptySubscribe, getSnapshot)
+  const hasFetched = useRef(false)
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (hasFetched.current) return
+    hasFetched.current = true
 
-  useEffect(() => {
-    if (!convId) return
+    const supabase = createClient()
+
+    const fetchUnread = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: conversations } = await supabase
+        .from('conversations')
+        .select('id')
+        .or(`participant_a.eq.${user.id},participant_b.eq.${user.id}`)
+
+      const convIds = (conversations || []).map((c: Record<string, string>) => c.id)
+      if (convIds.length === 0) {
+        setUnreadCount(0)
+        return
+      }
+
+      const { count } = await supabase
+        .from('messages')
+        .select('id', { count: 'exact', head: true })
+        .in('conversation_id', convIds)
+        .neq('sender_id', user.id)
+        .is('read_at', null)
+
+      setUnreadCount(count ?? 0)
+    }
+
+    fetchUnread()
 
     const channel = supabase
-      .channel(`chat:${convId}`)
+      .channel('messages-changes')
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${convId}`,
-        },
-        (payload) => {
-          const newMsg = payload.new as Message
-          setMessages((prev) => [...prev, newMsg])
-        }
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        // Re-fetch from DB rather than incrementing blindly — this ensures
+        // we only count messages in conversations the user is actually part of
+        () => fetchUnread()
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'messages' },
+        // Re-fetch when messages are marked as read (e.g. user opens the chat)
+        () => fetchUnread()
       )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [convId, supabase])
-
-  const sendMessage = async () => {
-    if (!newMessage.trim() || sending) return
-    setSending(true)
-
-    try {
-      let targetConvId = convId
-
-      if (!targetConvId) {
-        const { data: existing } = await supabase
-          .from('conversations')
-          .select('id')
-          .or(
-            `and(participant_a.eq.${currentUserId},participant_b.eq.${otherUser.id}),and(participant_a.eq.${otherUser.id},participant_b.eq.${currentUserId})`
-          )
-          .single()
-
-        if (existing) {
-          targetConvId = existing.id
-        } else {
-          const { data: newConv } = await supabase
-            .from('conversations')
-            .insert({
-              participant_a: currentUserId,
-              participant_b: otherUser.id,
-            })
-            .select('id')
-            .single()
-          targetConvId = newConv?.id ?? null
-        }
-        if (targetConvId) setConvId(targetConvId)
-      }
-
-      if (!targetConvId) return
-
-      const { data: sent } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: targetConvId,
-          sender_id: currentUserId,
-          content: newMessage.trim(),
-        })
-        .select('id, content, sender_id, created_at')
-        .single()
-
-      if (sent) {
-        await supabase
-          .from('conversations')
-          .update({ last_message_at: new Date().toISOString() })
-          .eq('id', targetConvId)
-      }
-
-      setNewMessage('')
-    } finally {
-      setSending(false)
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage()
-    }
-  }
+  }, [])
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
-      <div className="flex items-center gap-3">
-        <a
-          href="/messages"
-          className="text-sm text-indigo-600 hover:underline flex items-center gap-1"
-        >
-          ← Back to messages
-        </a>
-      </div>
-
-      <div className="card p-4 flex items-center gap-3">
-        <Avatar src={otherUser.avatar_url} name={otherUser.full_name} size="md" />
-        <div>
-          <h2 className="font-semibold">{otherUser.full_name || 'User'}</h2>
-          <p className="text-xs text-slate-500">Tap to message</p>
-        </div>
-      </div>
-
-      <div className="card p-4 space-y-3 h-[400px] overflow-y-auto">
-        {messages.length === 0 ? (
-          <div className="text-center text-slate-400 mt-20">
-            Say hi to {otherUser.full_name?.split(' ')[0] || 'them'}!
-          </div>
-        ) : (
-          messages.map((msg) => {
-            const isMe = msg.sender_id === currentUserId
-            return (
-              <div
-                key={msg.id}
-                className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
-                    isMe
-                      ? 'bg-indigo-600 text-white rounded-br-md'
-                      : 'bg-slate-100 text-slate-900 rounded-bl-md'
-                  }`}
-                >
-                  {msg.content}
-                </div>
-              </div>
-            )
-          })
+    <Link
+      href="/messages"
+      className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 transition-all"
+    >
+      <div className="relative">
+        <MessageCircle size={20} />
+        {isMounted && unreadCount > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white shadow-sm animate-pulse">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
         )}
-        <div ref={bottomRef} />
       </div>
-
-      <div className="card p-3 flex gap-2 items-end">
-        <textarea
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
-          rows={1}
-          className="flex-1 border rounded-xl p-3 text-sm resize-none outline-none focus:ring-2 focus:ring-indigo-400"
-        />
-        <button
-          onClick={sendMessage}
-          disabled={sending || !newMessage.trim()}
-          className="p-3 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition-all"
-        >
-          <Send size={18} />
-        </button>
-      </div>
-    </div>
+      <span className="text-sm font-medium">Messages</span>
+    </Link>
   )
 }
