@@ -1,10 +1,21 @@
 import { createProject } from './actions'
 import TagInput from '@/app/components/common/TagInput'
 
-export default function CreateProject() {
+export default async function CreateProject({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const { error } = await searchParams
   return (
     <div className="max-w-3xl mx-auto py-8">
       <h2 className="text-3xl font-semibold mb-8">Create a project</h2>
+      {error ? (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 text-red-700 p-4">
+          <div className="font-semibold">Project creation failed</div>
+          <div className="text-sm mt-1 break-words">{error}</div>
+        </div>
+      ) : null}
       <form action={createProject} className="space-y-6 card p-8">
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-700">Project title</label>
