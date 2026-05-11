@@ -8,12 +8,14 @@ export default function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const hasSupabaseEnv = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
   const handleAuth = async (type: 'LOGIN' | 'SIGNUP') => {
+    setError(null)
     if (!hasSupabaseEnv) {
-      alert('Supabase environment variables are missing.')
+      setError('Supabase environment variables are missing.')
       return
     }
     setLoading(true)
@@ -23,7 +25,7 @@ export default function LoginForm() {
       : await supabase.auth.signUp({ email, password })
 
     if (error) {
-      alert(error.message)
+      setError(error.message)
     } else {
       router.push('/feed')
       router.refresh()
@@ -50,6 +52,7 @@ export default function LoginForm() {
       >
         {!hasSupabaseEnv ? 'Configure Supabase first' : loading ? 'Signing in...' : 'Sign in'}
       </button>
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
       <p className="text-sm text-slate-600 text-center">
         Don&apos;t have an account? <Link href="/signup" className="text-indigo-600 hover:underline">Sign up</Link>
       </p>

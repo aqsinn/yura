@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { updateProfile } from './actions'
+import TagInput from '@/app/components/common/TagInput'
 
 export default async function ProfilePage() {
   const supabase = await createClient()
@@ -28,8 +29,12 @@ export default async function ProfilePage() {
           <input name="university" defaultValue={profile?.university ?? ''} className="w-full border rounded-xl p-3" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Skills (comma separated)</label>
-          <input name="skills" defaultValue={(profile?.skills || []).join(', ')} className="w-full border rounded-xl p-3" />
+          <TagInput
+            name="skills"
+            label="Skills"
+            defaultValue={(profile?.skills || []) as string[]}
+            placeholder="react nextjs figma"
+          />
         </div>
         <button type="submit" className="w-full py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700">
           Save profile

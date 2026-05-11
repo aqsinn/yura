@@ -9,21 +9,30 @@ export default function SignupForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const hasSupabaseEnv = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
   const handleSignup = async () => {
+    setError(null)
     if (!hasSupabaseEnv) {
-      alert('Supabase environment variables are missing.')
+      setError('Supabase environment variables are missing.')
       return
     }
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({ email, password })
     setLoading(false)
 
     if (error) {
-      alert(error.message)
+      setError(error.message)
+      return
+    }
+
+    // If email confirmations are enabled, session can be null after signup.
+    if (!data.session) {
+      router.push('/login')
+      router.refresh()
       return
     }
 
@@ -52,6 +61,7 @@ export default function SignupForm() {
       >
         {!hasSupabaseEnv ? 'Configure Supabase first' : loading ? 'Creating account...' : 'Create account'}
       </button>
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
       <p className="text-sm text-slate-600 text-center">
         Already have an account? <Link href="/login" className="text-indigo-600 hover:underline">Sign in</Link>
       </p>

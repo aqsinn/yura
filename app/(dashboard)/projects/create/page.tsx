@@ -1,4 +1,5 @@
 import { createProject } from './actions'
+import TagInput from '@/app/components/common/TagInput'
 
 export default function CreateProject() {
   return (
@@ -13,10 +14,12 @@ export default function CreateProject() {
           <label className="text-sm font-medium text-slate-700">Description</label>
           <textarea name="description" className="w-full bg-white border rounded-xl p-3 outline-none h-32 focus:ring-2 focus:ring-indigo-400" placeholder="Describe the project scope..." required />
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">Required skills (comma separated)</label>
-          <input name="skills" className="w-full bg-white border rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-400" placeholder="React, Python, Figma" required />
-        </div>
+        <TagInput
+          name="skills"
+          label="Required skills"
+          placeholder="React Python Figma"
+          required
+        />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700">Category</label>
