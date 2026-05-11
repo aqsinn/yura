@@ -25,7 +25,7 @@ export default async function NotificationsPage() {
     .eq('receiver_id', user.id)
     .order('created_at', { ascending: false })
 
-  const offers = (offersRaw || []) as OfferRecord[]
+  const offers = (offersRaw || []) as unknown as OfferRecord[]
 
   // Fetch sender profiles for avatar display
   const senderIds = [...new Set(offers.map((o) => o.sender_id))]
