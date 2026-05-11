@@ -42,6 +42,16 @@ export default async function ChatPage({
         .order('created_at', { ascending: true })
     : { data: [] }
 
+  // Mark incoming messages as read now that the user has opened the conversation
+  if (conversationId) {
+    await supabase
+      .from('messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('conversation_id', conversationId)
+      .neq('sender_id', user.id)
+      .is('read_at', null)
+  }
+
   return (
     <ChatUI
       conversationId={conversationId}
