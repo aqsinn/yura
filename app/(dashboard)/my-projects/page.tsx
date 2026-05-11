@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { respondJoinRequest } from './actions'
+import { Bell } from 'lucide-react'
 
 type JoinRequest = {
   id: string
@@ -40,6 +41,13 @@ export default async function MyProjectsPage({
 
   const joinRequests = (requestsRaw || []) as JoinRequest[]
 
+  const pendingByProject: Record<string, number> = {}
+  for (const r of joinRequests) {
+    if (r.status === 'pending') {
+      pendingByProject[r.project_id] = (pendingByProject[r.project_id] || 0) + 1
+    }
+  }
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <h1 className="text-3xl font-semibold">My projects</h1>
@@ -50,8 +58,16 @@ export default async function MyProjectsPage({
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">Created by me</h2>
         <div className="grid gap-4">
-          {myProjects?.length ? myProjects.map((project) => (
-            <div key={project.id} className="card p-5">
+          {myProjects?.length ? myProjects.map((project) => {
+          const pendingCount = pendingByProject[project.id] || 0
+          return (
+            <div key={project.id} className="card p-5 relative">
+              {pendingCount > 0 && (
+                <span className="absolute top-4 right-4 flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 border border-red-200 text-red-600 text-xs font-medium">
+                  <Bell size={12} />
+                  {pendingCount} new request{pendingCount > 1 ? 's' : ''}
+                </span>
+              )}
               <div className="flex justify-between items-start gap-4">
                 <div>
                   <h3 className="text-lg font-semibold">{project.title}</h3>
@@ -60,7 +76,8 @@ export default async function MyProjectsPage({
                 <Link href={`/projects/${project.id}`} className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm">Open</Link>
               </div>
             </div>
-          )) : <div className="card p-8 text-slate-600">You have not created projects yet.</div>}
+          )
+        }) : <div className="card p-8 text-slate-600">You have not created projects yet.</div>}
         </div>
       </section>
 

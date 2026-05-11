@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import ProjectCard from '@/app/components/projects/ProjectCard'
+import MessagesWidget from '@/app/components/messaging/MessagesWidget'
 
 export default async function FeedPage({
   searchParams,
@@ -21,16 +22,31 @@ export default async function FeedPage({
 
   const { data: projects } = await query
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('skills').eq('id', user.id).single()
+    : { data: null }
+
+  const userSkills: string[] = (profile?.skills as string[] | null) ?? []
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       {created ? <div className="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 p-4">Project published successfully.</div> : null}
-      <header>
-        <h2 className="text-4xl font-semibold tracking-tight">Recommended projects</h2>
-        <p className="text-slate-600">Projects matched for your interests and skills.</p>
-      </header>
+      <div className="flex justify-between items-start">
+        <header>
+          <h2 className="text-4xl font-semibold tracking-tight">Recommended projects</h2>
+          <p className="text-slate-600">Projects matched for your interests and skills.</p>
+        </header>
+        <div className="mt-2">
+          <MessagesWidget />
+        </div>
+      </div>
       <div className="grid grid-cols-1 gap-6">
         {projects?.length ? projects.map((project, i) => (
-          <ProjectCard key={project.id} project={project} index={i} />
+          <ProjectCard key={project.id} project={project} index={i} userSkills={userSkills} />
         )) : <div className="card p-8 text-slate-600">No projects yet. Create one to kick things off.</div>}
       </div>
     </div>

@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { LayoutGrid, SquarePlus, Bell, User, Compass, Rocket, FolderKanban } from 'lucide-react'
+import { Rocket } from 'lucide-react'
 import { createClient } from '@/utils/supabase/server'
+import DashboardNav from '@/app/components/navigation/DashboardNav'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -13,29 +14,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/login')
   }
 
-  const navItems = [
-    { name: 'Feed', href: '/feed', icon: LayoutGrid },
-    { name: 'Create', href: '/projects/create', icon: SquarePlus },
-    { name: 'My Projects', href: '/my-projects', icon: FolderKanban },
-    { name: 'Discover', href: '/discover', icon: Compass },
-    { name: 'Signals', href: '/notifications', icon: Bell },
-    { name: 'Profile', href: '/profile', icon: User },
-  ]
-
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-900">
       <aside className="w-72 border-r hidden lg:flex flex-col p-8 fixed h-full bg-white">
         <div className="flex items-center gap-3 mb-12 font-bold text-2xl text-indigo-600">
           <Rocket className="text-indigo-600" /> Yura
         </div>
-        <nav className="flex-1 space-y-3">
-          {navItems.map((item) => (
-            <Link key={item.name} href={item.href} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 transition-all">
-              <item.icon size={20} />
-              <span className="text-sm font-medium">{item.name}</span>
-            </Link>
-          ))}
-        </nav>
+        <DashboardNav />
       </aside>
 
       <main className="lg:ml-72 flex-1 p-6 lg:p-10 pb-24 lg:pb-10">
@@ -44,12 +29,30 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <nav className="fixed bottom-0 left-0 right-0 lg:hidden border-t bg-white p-3">
         <div className="grid grid-cols-6 gap-2">
-          {navItems.map((item) => (
-            <Link key={item.name} href={item.href} className="flex flex-col items-center gap-1 py-2 text-xs text-slate-600">
-              <item.icon size={18} />
-              {item.name}
-            </Link>
-          ))}
+          <Link href="/feed" className="flex flex-col items-center gap-1 py-2 text-xs text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+            Feed
+          </Link>
+          <Link href="/projects/create" className="flex flex-col items-center gap-1 py-2 text-xs text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Create
+          </Link>
+          <Link href="/my-projects" className="flex flex-col items-center gap-1 py-2 text-xs text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+            My
+          </Link>
+          <Link href="/discover" className="flex flex-col items-center gap-1 py-2 text-xs text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+            Discov
+          </Link>
+          <Link href="/notifications" className="flex flex-col items-center gap-1 py-2 text-xs text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            Signal
+          </Link>
+          <Link href="/profile" className="flex flex-col items-center gap-1 py-2 text-xs text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+            Profile
+          </Link>
         </div>
       </nav>
     </div>
