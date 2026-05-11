@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { LayoutGrid, SquarePlus, Bell, User, Compass, Rocket } from 'lucide-react'
+import { LayoutGrid, SquarePlus, Bell, User, Compass, Rocket, FolderKanban } from 'lucide-react'
 import { createClient } from '@/utils/supabase/server'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -16,6 +16,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const navItems = [
     { name: 'Feed', href: '/feed', icon: LayoutGrid },
     { name: 'Create', href: '/projects/create', icon: SquarePlus },
+    { name: 'My Projects', href: '/my-projects', icon: FolderKanban },
     { name: 'Discover', href: '/discover', icon: Compass },
     { name: 'Signals', href: '/notifications', icon: Bell },
     { name: 'Profile', href: '/profile', icon: User },
@@ -42,7 +43,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 lg:hidden border-t bg-white p-3">
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-6 gap-2">
           {navItems.map((item) => (
             <Link key={item.name} href={item.href} className="flex flex-col items-center gap-1 py-2 text-xs text-slate-600">
               <item.icon size={18} />

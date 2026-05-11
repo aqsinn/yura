@@ -4,9 +4,9 @@ import ProjectCard from '@/app/components/projects/ProjectCard'
 export default async function FeedPage({
   searchParams,
 }: {
-  searchParams: Promise<{ skill?: string; category?: string; timeline?: string }>
+  searchParams: Promise<{ skill?: string; category?: string; timeline?: string; created?: string }>
 }) {
-  const { skill, category, timeline } = await searchParams
+  const { skill, category, timeline, created } = await searchParams
   const supabase = await createClient()
 
   let query = supabase
@@ -22,6 +22,7 @@ export default async function FeedPage({
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
+      {created ? <div className="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 p-4">Project published successfully.</div> : null}
       <header>
         <h2 className="text-4xl font-semibold tracking-tight">Recommended projects</h2>
         <p className="text-slate-600">Projects matched for your interests and skills.</p>

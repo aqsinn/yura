@@ -26,7 +26,7 @@ export async function createProject(formData: FormData) {
 export async function createProjectAction(
   _prevState: { error?: string },
   formData: FormData
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; success?: boolean }> {
   try {
     const supabase = await createClient()
     const {
@@ -107,8 +107,9 @@ export async function createProjectAction(
     }
 
     revalidatePath('/feed')
+    revalidatePath('/my-projects')
     revalidatePath('/notifications')
-    return {}
+    return { success: true }
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error'
     return { error: message }

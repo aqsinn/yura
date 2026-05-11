@@ -1,15 +1,17 @@
 'use client'
 
 import { useActionState, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import TagInput from '@/app/components/common/TagInput'
 import { createProjectAction } from './actions'
 
-type FormState = { error?: string }
+type FormState = { error?: string; success?: boolean }
 
 const initialState: FormState = {}
 
 export default function CreateProjectForm({ initialError }: { initialError?: string }) {
   const [state, formAction, pending] = useActionState(createProjectAction, initialState)
+  const router = useRouter()
 
   // Persist basic values in local state so they survive action failures.
   const [title, setTitle] = useState('')
@@ -21,8 +23,12 @@ export default function CreateProjectForm({ initialError }: { initialError?: str
   // If we have a query-string error (old deployments), show it too.
   const error = state.error || initialError
 
-  // When the action succeeds, it will redirect; this effect is just defensive.
-  useEffect(() => {}, [state])
+  useEffect(() => {
+    if (state.success) {
+      router.push('/my-projects?created=1')
+      router.refresh()
+    }
+  }, [router, state.success])
 
   return (
     <div className="max-w-3xl mx-auto py-8">

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
+import { requestToJoinProject } from './actions'
 
 type ProjectMember = {
   profile_id: string
@@ -10,11 +11,17 @@ type ProjectMember = {
 
 export default async function ProjectDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ requested?: string; error?: string }>
 }) {
   const { id } = await params
+  const { requested, error } = await searchParams
   const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   const { data: project } = await supabase
     .from('projects')
     .select('*')
@@ -23,6 +30,8 @@ export default async function ProjectDetailPage({
 
   if (!project) return notFound()
 
+  const isOwner = user?.id === project.creator_id
+
   const { data: members } = await supabase
     .from('project_members')
     .select('profile_id, role, status, profiles(full_name)')
@@ -30,6 +39,8 @@ export default async function ProjectDetailPage({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {requested ? <div className="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 p-4">Join request sent to the project owner.</div> : null}
+      {error ? <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 p-4 break-words">{error}</div> : null}
       <div className="card p-8">
         <h1 className="text-3xl font-semibold mb-3">{project.title}</h1>
         <p className="text-slate-600 mb-6">{project.description}</p>
@@ -45,6 +56,13 @@ export default async function ProjectDetailPage({
             </div>
           ))}
         </div>
+        {!isOwner && user ? (
+          <form action={requestToJoinProject} className="mt-6">
+            <input type="hidden" name="project_id" value={project.id} />
+            <input type="hidden" name="owner_id" value={project.creator_id} />
+            <button className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm">Request to join</button>
+          </form>
+        ) : null}
       </div>
 
       <div className="card p-6">
