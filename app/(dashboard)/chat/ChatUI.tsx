@@ -128,10 +128,10 @@ export default function ChatUI({
     <div className="max-w-2xl mx-auto space-y-4">
       <div className="flex items-center gap-3">
         <a
-          href="/notifications"
+          href="/messages"
           className="text-sm text-indigo-600 hover:underline flex items-center gap-1"
         >
-          ← Back to signals
+          ← Back to messages
         </a>
       </div>
 

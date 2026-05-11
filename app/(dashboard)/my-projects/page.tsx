@@ -3,13 +3,21 @@ import { createClient } from '@/utils/supabase/server'
 import { respondJoinRequest } from './actions'
 import { Bell } from 'lucide-react'
 
-type JoinRequest = {
+type IncomingOffer = {
   id: string
   status: string
   project_id: string
   sender_id: string
   projects: { title: string }[] | null
-  sender_profile: { full_name: string | null }[] | null
+  sender_profile: Record<string, unknown>[] | null
+}
+
+type SentOffer = {
+  id: string
+  status: string
+  project_id: string
+  projects: { title: string }[] | null
+  receiver_profile: Record<string, unknown>[] | null
 }
 
 export default async function MyProjectsPage({
@@ -65,11 +73,11 @@ export default async function MyProjectsPage({
     console.error('Error fetching incoming requests:', requestsError)
   }
 
-  const joinRequests = (requestsRaw || []) as any[]
-  const sentRequests = (sentRequestsRaw || []) as any[]
+  const joinRequests = (requestsRaw || []) as unknown as IncomingOffer[]
+  const sentRequests = (sentRequestsRaw || []) as unknown as SentOffer[]
 
   const pendingByProject: Record<string, number> = {}
-  for (const r of joinRequests) {
+  for (const r of joinRequests as unknown as IncomingOffer[]) {
     if (r.status === 'pending') {
       pendingByProject[r.project_id] = (pendingByProject[r.project_id] || 0) + 1
     }
@@ -117,10 +125,10 @@ export default async function MyProjectsPage({
                 <div>
                   <p className="font-medium">
                     {(() => {
-                      const profile = Array.isArray(offer.sender_profile) 
-                        ? offer.sender_profile[0] 
+                      const profile = Array.isArray(offer.sender_profile)
+                        ? offer.sender_profile[0]
                         : offer.sender_profile;
-                      return profile?.full_name || 'A student';
+                      return (profile?.full_name as string | null | undefined) || 'A student';
                     })()} requested to join
                   </p>
                   <p className="text-slate-600 text-sm">
@@ -171,10 +179,10 @@ export default async function MyProjectsPage({
                   </p>
                   <p className="text-slate-600 text-sm">
                     Owner: {(() => {
-                      const profile = Array.isArray(offer.receiver_profile) 
-                        ? offer.receiver_profile[0] 
+                      const profile = Array.isArray(offer.receiver_profile)
+                        ? offer.receiver_profile[0]
                         : offer.receiver_profile;
-                      return profile?.full_name || 'Project Owner';
+                      return (profile?.full_name as string | null | undefined) || 'Project Owner';
                     })()}
                   </p>
                   <p className="text-slate-600 text-sm">Status: <span className="capitalize">{offer.status}</span></p>

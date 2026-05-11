@@ -16,7 +16,7 @@ export default async function ChatPage({
 
   if (!user) redirect('/login')
 
-  if (!otherUserId) redirect('/notifications')
+  if (!otherUserId) redirect('/messages')
 
   const { data: otherProfile } = await supabase
     .from('profiles')
@@ -24,7 +24,7 @@ export default async function ChatPage({
     .eq('id', otherUserId)
     .single()
 
-  if (!otherProfile) redirect('/notifications')
+  if (!otherProfile) redirect('/messages')
 
   const { data: conversation } = await supabase
     .from('conversations')
