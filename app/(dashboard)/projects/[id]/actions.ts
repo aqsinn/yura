@@ -12,8 +12,23 @@ export async function requestToJoinProject(formData: FormData) {
   if (!user) redirect('/login')
 
   const projectId = String(formData.get('project_id') || '')
-  const ownerId = String(formData.get('owner_id') || '')
-  if (!projectId || !ownerId) return
+  if (!projectId) return
+
+  const { data: project, error: projectError } = await supabase
+    .from('projects')
+    .select('creator_id')
+    .eq('id', projectId)
+    .single()
+
+  if (projectError || !project?.creator_id) {
+    redirect(
+      `/projects/${projectId}?error=${encodeURIComponent(
+        projectError?.message || 'Project not found.'
+      )}`
+    )
+  }
+
+  const ownerId = project.creator_id as string
 
   if (user.id === ownerId) {
     redirect(`/projects/${projectId}?error=${encodeURIComponent('You are the project owner.')}`)

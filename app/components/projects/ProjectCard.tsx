@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Sparkles } from 'lucide-react'
 import { useJoinProject } from './useJoinProject'
+import Avatar from '@/app/components/common/Avatar'
 
 type ProjectCardData = {
   id: string
@@ -59,10 +60,22 @@ export default function ProjectCard({
         </div>
       )}
       <div className="flex justify-between items-start mb-6">
-        <div>
-          <span className="px-3 py-1 bg-slate-100 border rounded-full text-xs font-medium text-slate-600">
-             @{project.profiles?.full_name || 'Anonymous'}
-          </span>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Avatar src={project.profiles?.avatar_url} name={project.profiles?.full_name} size="sm" />
+            {project.creator_id ? (
+              <Link
+                href={`/profile/${project.creator_id}`}
+                className="px-3 py-1 bg-slate-100 border rounded-full text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                @{project.profiles?.full_name || 'Anonymous'}
+              </Link>
+            ) : (
+              <span className="px-3 py-1 bg-slate-100 border rounded-full text-xs font-medium text-slate-600">
+                @{project.profiles?.full_name || 'Anonymous'}
+              </span>
+            )}
+          </div>
           <h3 className="text-2xl font-semibold mt-2 group-hover:text-indigo-600 transition-colors">
             {project.title}
           </h3>
@@ -78,7 +91,7 @@ export default function ProjectCard({
                 <span className="px-4 py-2 bg-amber-50 text-amber-700 text-sm font-medium rounded-xl border border-amber-100">Pending</span>
               ) : (
                 <button
-                  onClick={() => requestJoin(project.id, project.creator_id!)}
+                  onClick={() => requestJoin(project.id)}
                   disabled={pending}
                   className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-60"
                 >
