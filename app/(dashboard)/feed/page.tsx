@@ -11,7 +11,8 @@ export default async function FeedPage({
 
   let query = supabase
     .from('projects')
-    .select('*, profiles(full_name)')
+    .select('*, profiles:creator_id(full_name)')
+    .eq('status', 'open')
     .order('created_at', { ascending: false })
 
   if (category) query = query.eq('category', category)

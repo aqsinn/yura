@@ -59,5 +59,7 @@ export async function updateProfile(formData: FormData) {
   }
 
   revalidatePath('/profile')
-  redirect('/profile?saved=1')
+  revalidatePath(`/profile/${user.id}`)
+  revalidatePath('/discover')
+  redirect(`/profile/${user.id}?saved=1`)
 }

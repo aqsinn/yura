@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { updateProfile } from './actions'
 import TagInput from '@/app/components/common/TagInput'
@@ -19,7 +20,17 @@ export default async function ProfilePage({
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
-      <h1 className="text-3xl font-semibold">Your profile</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-semibold">Your profile</h1>
+        {user && (
+          <Link
+            href={`/profile/${user.id}`}
+            className="px-4 py-2 rounded-xl border text-sm hover:bg-slate-50"
+          >
+            View public profile
+          </Link>
+        )}
+      </div>
       {saved ? (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 p-4">
           Saved successfully.

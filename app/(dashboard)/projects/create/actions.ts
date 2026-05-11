@@ -63,6 +63,17 @@ export async function createProjectAction(
       return { error: error?.message || 'Failed to create project.' }
     }
 
+    // Add creator as project member with 'owner' role
+    const { error: memberError } = await supabase.from('project_members').insert({
+      project_id: project.id,
+      profile_id: user.id,
+      role: 'owner',
+      status: 'active',
+    })
+    if (memberError) {
+      return { error: `Failed to add you as project member: ${memberError.message}` }
+    }
+
     if (requiredSkills.length) {
       const { error: skillsUpsertError } = await supabase.from('skills').upsert(
         requiredSkills.map((slug) => ({

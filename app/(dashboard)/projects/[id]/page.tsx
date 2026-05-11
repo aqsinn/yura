@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { requestToJoinProject } from './actions'
 
@@ -24,13 +25,14 @@ export default async function ProjectDetailPage({
   } = await supabase.auth.getUser()
   const { data: project } = await supabase
     .from('projects')
-    .select('*')
+    .select('*, creator:creator_id(id, full_name)')
     .eq('id', id)
     .single()
 
   if (!project) return notFound()
 
   const isOwner = user?.id === project.creator_id
+  const creator = project.creator as { id: string; full_name: string | null } | null
 
   const { data: members } = await supabase
     .from('project_members')
@@ -42,6 +44,15 @@ export default async function ProjectDetailPage({
       {requested ? <div className="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 p-4">Join request sent to the project owner.</div> : null}
       {error ? <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 p-4 break-words">{error}</div> : null}
       <div className="card p-8">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-slate-500 text-sm">Created by</span>
+          <Link
+            href={`/profile/${project.creator_id}`}
+            className="text-indigo-600 hover:underline text-sm font-medium"
+          >
+            {creator?.full_name || 'Anonymous'}
+          </Link>
+        </div>
         <h1 className="text-3xl font-semibold mb-3">{project.title}</h1>
         <p className="text-slate-600 mb-6">{project.description}</p>
         <div className="flex flex-wrap gap-2 mb-6">
@@ -69,8 +80,13 @@ export default async function ProjectDetailPage({
         <h2 className="text-xl font-semibold mb-3">Team members</h2>
         <div className="space-y-2">
           {members?.length ? members.map((member: ProjectMember) => (
-            <div key={member.profile_id} className="flex justify-between border rounded-xl p-3">
-              <span>{member.profiles?.[0]?.full_name || 'Unknown'}</span>
+            <div key={member.profile_id} className="flex justify-between items-center border rounded-xl p-3">
+              <Link
+                href={`/profile/${member.profile_id}`}
+                className="text-indigo-600 hover:underline"
+              >
+                {member.profiles?.[0]?.full_name || 'Unknown'}
+              </Link>
               <span className="text-slate-600 text-sm">{member.role}</span>
             </div>
           )) : <p className="text-slate-600">No members joined yet.</p>}
