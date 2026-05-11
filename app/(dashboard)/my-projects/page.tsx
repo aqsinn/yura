@@ -2,22 +2,24 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { respondJoinRequest } from './actions'
 import { Bell } from 'lucide-react'
+import Avatar from '@/app/components/common/Avatar'
 
 type IncomingOffer = {
   id: string
   status: string
   project_id: string
   sender_id: string
-  projects: { title: string }[] | null
-  sender_profile: Record<string, unknown>[] | null
+  projects: { title: string } | { title: string }[] | null
+  sender_profile: { full_name: string | null; avatar_url: string | null } | { full_name: string | null; avatar_url: string | null }[] | null
 }
 
 type SentOffer = {
   id: string
   status: string
   project_id: string
-  projects: { title: string }[] | null
-  receiver_profile: Record<string, unknown>[] | null
+  receiver_id: string
+  projects: { title: string } | { title: string }[] | null
+  receiver_profile: { full_name: string | null; avatar_url: string | null } | { full_name: string | null; avatar_url: string | null }[] | null
 }
 
 export default async function MyProjectsPage({
@@ -39,17 +41,14 @@ export default async function MyProjectsPage({
         .order('created_at', { ascending: false })
     : { data: [] }
 
-  const [{ data: requestsRaw, error: requestsError }, { data: sentRequestsRaw }] = await Promise.all([
+  const [{ data: requestsRaw, error: requestsError }, { data: sentRequestsRaw, error: sentError }] = await Promise.all([
     user
       ? supabase
           .from('offers')
           .select(`
-            id,
-            status,
-            project_id,
-            sender_id,
-            projects(title),
-            sender_profile:profiles!sender_id(full_name)
+            *,
+            projects:project_id(title),
+            sender_profile:sender_id(full_name, avatar_url)
           `)
           .eq('receiver_id', user.id)
           .order('created_at', { ascending: false })
@@ -58,20 +57,17 @@ export default async function MyProjectsPage({
       ? supabase
           .from('offers')
           .select(`
-            id,
-            status,
-            project_id,
-            projects(title),
-            receiver_profile:profiles!receiver_id(full_name)
+            *,
+            projects:project_id(title),
+            receiver_profile:receiver_id(full_name, avatar_url)
           `)
           .eq('sender_id', user.id)
           .order('created_at', { ascending: false })
       : Promise.resolve({ data: [], error: null }),
   ])
 
-  if (requestsError) {
-    console.error('Error fetching incoming requests:', requestsError)
-  }
+  if (requestsError) console.error('Incoming requests error:', requestsError)
+  if (sentError) console.error('Sent requests error:', sentError)
 
   const joinRequests = (requestsRaw || []) as unknown as IncomingOffer[]
   const sentRequests = (sentRequestsRaw || []) as unknown as SentOffer[]
@@ -122,24 +118,29 @@ export default async function MyProjectsPage({
           {joinRequests.length ? joinRequests.map((offer) => (
             <div key={offer.id} className="card p-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="font-medium">
-                    {(() => {
-                      const profile = Array.isArray(offer.sender_profile)
-                        ? offer.sender_profile[0]
-                        : offer.sender_profile;
-                      return (profile?.full_name as string | null | undefined) || 'A student';
-                    })()} requested to join
-                  </p>
-                  <p className="text-slate-600 text-sm">
-                    Project: {(() => {
-                      const proj = Array.isArray(offer.projects) 
-                        ? offer.projects[0] 
-                        : offer.projects;
-                      return proj?.title || 'Unknown project';
-                    })()}
-                  </p>
-                  <p className="text-slate-600 text-sm">Status: <span className="capitalize">{offer.status}</span></p>
+                <div className="flex items-center gap-4">
+                  {(() => {
+                    const profile = Array.isArray(offer.sender_profile)
+                      ? offer.sender_profile[0]
+                      : offer.sender_profile;
+                    const proj = Array.isArray(offer.projects)
+                      ? offer.projects[0]
+                      : offer.projects;
+                    return (
+                      <>
+                        <Avatar src={profile?.avatar_url} name={profile?.full_name} size="md" />
+                        <div>
+                          <p className="font-medium">
+                            {profile?.full_name || 'A student'} requested to join
+                          </p>
+                          <p className="text-slate-600 text-sm">
+                            Project: {proj?.title || 'Unknown project'}
+                          </p>
+                          <p className="text-slate-600 text-sm">Status: <span className="capitalize">{offer.status}</span></p>
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
                 {offer.status === 'pending' ? (
                   <div className="flex gap-2">
@@ -167,25 +168,30 @@ export default async function MyProjectsPage({
           {sentRequests.length ? sentRequests.map((offer) => (
             <div key={offer.id} className="card p-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="font-medium">You requested to join</p>
-                  <p className="text-slate-600 text-sm">
-                    Project: {(() => {
-                      const proj = Array.isArray(offer.projects) 
-                        ? offer.projects[0] 
-                        : offer.projects;
-                      return proj?.title || 'Unknown project';
-                    })()}
-                  </p>
-                  <p className="text-slate-600 text-sm">
-                    Owner: {(() => {
-                      const profile = Array.isArray(offer.receiver_profile)
-                        ? offer.receiver_profile[0]
-                        : offer.receiver_profile;
-                      return (profile?.full_name as string | null | undefined) || 'Project Owner';
-                    })()}
-                  </p>
-                  <p className="text-slate-600 text-sm">Status: <span className="capitalize">{offer.status}</span></p>
+                <div className="flex items-center gap-4">
+                  {(() => {
+                    const profile = Array.isArray(offer.receiver_profile)
+                      ? offer.receiver_profile[0]
+                      : offer.receiver_profile;
+                    const proj = Array.isArray(offer.projects)
+                      ? offer.projects[0]
+                      : offer.projects;
+                    return (
+                      <>
+                        <Avatar src={profile?.avatar_url} name={profile?.full_name} size="md" />
+                        <div>
+                          <p className="font-medium">You requested to join</p>
+                          <p className="text-slate-600 text-sm">
+                            Project: {proj?.title || 'Unknown project'}
+                          </p>
+                          <p className="text-slate-600 text-sm">
+                            Owner: {profile?.full_name || 'Project Owner'}
+                          </p>
+                          <p className="text-slate-600 text-sm">Status: <span className="capitalize">{offer.status}</span></p>
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
                 <Link href={`/projects/${offer.project_id}`} className="px-4 py-2 rounded-xl border text-sm text-center">View Project</Link>
               </div>

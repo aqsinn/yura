@@ -2,12 +2,13 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { requestToJoinProject } from './actions'
+import Avatar from '@/app/components/common/Avatar'
 
 type ProjectMember = {
   profile_id: string
   role: string
   status: string
-  profiles: { full_name: string | null }[] | null
+  profiles: { full_name: string | null; avatar_url: string | null } | { full_name: string | null; avatar_url: string | null }[] | null
 }
 
 export default async function ProjectDetailPage({
@@ -37,7 +38,7 @@ export default async function ProjectDetailPage({
   const [{ data: members }, { data: existingOffer }] = await Promise.all([
     supabase
       .from('project_members')
-      .select('profile_id, role, status, profiles(full_name)')
+      .select('profile_id, role, status, profiles:profile_id(full_name, avatar_url)')
       .eq('project_id', id),
     user
       ? supabase
@@ -105,16 +106,26 @@ export default async function ProjectDetailPage({
 
       <div className="card p-6">
         <h2 className="text-xl font-semibold mb-3">Team members</h2>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {members?.length ? members.map((member: ProjectMember) => (
             <div key={member.profile_id} className="flex justify-between items-center border rounded-xl p-3">
-              <Link
-                href={`/profile/${member.profile_id}`}
-                className="text-indigo-600 hover:underline"
-              >
-                {member.profiles?.[0]?.full_name || 'Unknown'}
-              </Link>
-              <span className="text-slate-600 text-sm">{member.role}</span>
+              <div className="flex items-center gap-3">
+                {(() => {
+                  const p = Array.isArray(member.profiles) ? member.profiles[0] : member.profiles
+                  return (
+                    <>
+                      <Avatar src={p?.avatar_url} name={p?.full_name} size="sm" />
+                      <Link
+                        href={`/profile/${member.profile_id}`}
+                        className="text-indigo-600 hover:underline font-medium"
+                      >
+                        {p?.full_name || 'Unknown'}
+                      </Link>
+                    </>
+                  )
+                })()}
+              </div>
+              <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-lg capitalize">{member.role}</span>
             </div>
           )) : <p className="text-slate-600">No members joined yet.</p>}
         </div>
