@@ -16,6 +16,17 @@ function parseSkills(raw: string) {
 }
 
 export async function createProject(formData: FormData) {
+  const result = await createProjectAction({}, formData)
+  if (result?.error) {
+    redirect(`/projects/create?error=${encodeURIComponent(result.error)}`)
+  }
+  redirect('/feed')
+}
+
+export async function createProjectAction(
+  _prevState: { error?: string },
+  formData: FormData
+): Promise<{ error?: string }> {
   try {
     const supabase = await createClient()
     const {
@@ -23,12 +34,12 @@ export async function createProject(formData: FormData) {
     } = await supabase.auth.getUser()
 
     if (!user) {
-      redirect('/login')
+      return { error: 'You must be logged in.' }
     }
 
     const title = String(formData.get('title') || '')
     const description = String(formData.get('description') || '')
-    const category = String(formData.get('category') || 'general')
+    const category = String(formData.get('category') || 'engineering')
     const timeline = String(formData.get('timeline') || '1-2 months')
     const teamSize = Number(formData.get('team_size') || 3)
     const requiredSkills = parseSkills(String(formData.get('skills') || ''))
@@ -49,7 +60,7 @@ export async function createProject(formData: FormData) {
       .single()
 
     if (error || !project) {
-      throw new Error(error?.message || 'Failed to create project.')
+      return { error: error?.message || 'Failed to create project.' }
     }
 
     if (requiredSkills.length) {
@@ -62,7 +73,7 @@ export async function createProject(formData: FormData) {
         { onConflict: 'slug' }
       )
       if (skillsUpsertError) {
-        throw new Error(`Skills upsert failed: ${skillsUpsertError.message}`)
+        return { error: `Skills upsert failed: ${skillsUpsertError.message}` }
       }
 
       const { data: skillRows, error: skillsSelectError } = await supabase
@@ -70,7 +81,7 @@ export async function createProject(formData: FormData) {
         .select('id,slug')
         .in('slug', requiredSkills)
       if (skillsSelectError) {
-        throw new Error(`Skills lookup failed: ${skillsSelectError.message}`)
+        return { error: `Skills lookup failed: ${skillsSelectError.message}` }
       }
 
       if (skillRows?.length) {
@@ -81,7 +92,7 @@ export async function createProject(formData: FormData) {
           }))
         )
         if (prsInsertError) {
-          throw new Error(`Project skills link failed: ${prsInsertError.message}`)
+          return { error: `Project skills link failed: ${prsInsertError.message}` }
         }
       }
     }
@@ -92,14 +103,14 @@ export async function createProject(formData: FormData) {
       p_message: null,
     })
     if (offersError) {
-      throw new Error(`Offer fanout failed: ${offersError.message}`)
+      return { error: `Offer fanout failed: ${offersError.message}` }
     }
 
     revalidatePath('/feed')
     revalidatePath('/notifications')
-    redirect('/feed')
+    return {}
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error'
-    redirect(`/projects/create?error=${encodeURIComponent(message)}`)
+    return { error: message }
   }
 }
