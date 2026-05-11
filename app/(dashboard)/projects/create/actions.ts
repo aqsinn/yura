@@ -51,7 +51,7 @@ export async function createProject(formData: FormData) {
   }
 
   if (requiredSkills.length) {
-    await supabase.from('skills').upsert(
+    const { error: skillsUpsertError } = await supabase.from('skills').upsert(
       requiredSkills.map((slug) => ({
         slug,
         name: slug.replace(/(^\w|\s\w)/g, (c) => c.toUpperCase()),
@@ -59,27 +59,39 @@ export async function createProject(formData: FormData) {
       })),
       { onConflict: 'slug' }
     )
+    if (skillsUpsertError) {
+      throw new Error(`Skills upsert failed: ${skillsUpsertError.message}`)
+    }
 
-    const { data: skillRows } = await supabase
+    const { data: skillRows, error: skillsSelectError } = await supabase
       .from('skills')
       .select('id,slug')
       .in('slug', requiredSkills)
+    if (skillsSelectError) {
+      throw new Error(`Skills lookup failed: ${skillsSelectError.message}`)
+    }
 
     if (skillRows?.length) {
-      await supabase.from('project_required_skills').insert(
+      const { error: prsInsertError } = await supabase.from('project_required_skills').insert(
         skillRows.map((skill) => ({
           project_id: project.id,
           skill_id: skill.id,
         }))
       )
+      if (prsInsertError) {
+        throw new Error(`Project skills link failed: ${prsInsertError.message}`)
+      }
     }
   }
 
-  await supabase.rpc('create_project_offers', {
+  const { error: offersError } = await supabase.rpc('create_project_offers', {
     p_project_id: project.id,
     p_sender_id: user.id,
     p_message: null,
   })
+  if (offersError) {
+    throw new Error(`Offer fanout failed: ${offersError.message}`)
+  }
 
   revalidatePath('/feed')
   revalidatePath('/notifications')
