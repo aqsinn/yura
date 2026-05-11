@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
+import Avatar from '@/app/components/common/Avatar'
 
 export default async function DiscoverPage({
   searchParams,
@@ -15,7 +16,7 @@ export default async function DiscoverPage({
   // Build query - exclude current user and only show profiles with a name or skills
   let query = supabase
     .from('profiles')
-    .select('id, full_name, bio, university, skills')
+    .select('id, full_name, bio, university, skills, avatar_url')
     .order('created_at', { ascending: false })
 
   // Exclude current user from discover
@@ -41,16 +42,27 @@ export default async function DiscoverPage({
         {visibleProfiles?.length ? visibleProfiles.map((profile) => (
           <div key={profile.id} className="card p-6">
             <div className="flex justify-between items-start mb-3">
-              <div>
-                <h3 className="text-lg font-semibold">{profile.full_name || 'Anonymous Student'}</h3>
-                <p className="text-slate-600 text-sm">{profile.university}</p>
+              <div className="flex items-center gap-3">
+                <Avatar src={profile.avatar_url} name={profile.full_name} size="md" />
+                <div>
+                  <h3 className="text-lg font-semibold">{profile.full_name || 'Anonymous Student'}</h3>
+                  <p className="text-slate-600 text-sm">{profile.university}</p>
+                </div>
               </div>
-              <Link
-                href={`/profile/${profile.id}`}
-                className="px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-sm hover:bg-indigo-700"
-              >
-                View
-              </Link>
+              <div className="flex gap-2">
+                <Link
+                  href={`/chat?with=${profile.id}`}
+                  className="px-3 py-1.5 rounded-xl border text-sm hover:bg-slate-50"
+                >
+                  Message
+                </Link>
+                <Link
+                  href={`/profile/${profile.id}`}
+                  className="px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-sm hover:bg-indigo-700"
+                >
+                  View
+                </Link>
+              </div>
             </div>
             <p className="text-slate-600 mb-4 line-clamp-2">{profile.bio || 'No bio yet.'}</p>
             <div className="flex flex-wrap gap-2">

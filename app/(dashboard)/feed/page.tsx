@@ -12,7 +12,7 @@ export default async function FeedPage({
 
   let query = supabase
     .from('projects')
-    .select('*, profiles:creator_id(full_name)')
+    .select('*, profiles:creator_id(full_name, avatar_url)')
     .eq('status', 'open')
     .order('created_at', { ascending: false })
 
@@ -46,7 +46,7 @@ export default async function FeedPage({
       </div>
       <div className="grid grid-cols-1 gap-6">
         {projects?.length ? projects.map((project, i) => (
-          <ProjectCard key={project.id} project={project} index={i} userSkills={userSkills} />
+          <ProjectCard key={project.id} project={project} index={i} userSkills={userSkills} currentUserId={user?.id} />
         )) : <div className="card p-8 text-slate-600">No projects yet. Create one to kick things off.</div>}
       </div>
     </div>

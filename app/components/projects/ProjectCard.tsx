@@ -2,13 +2,15 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Sparkles } from 'lucide-react'
+import { useJoinProject } from './useJoinProject'
 
 type ProjectCardData = {
   id: string
   title: string
   description: string
   required_skills?: string[]
-  profiles?: { full_name?: string | null } | null
+  creator_id?: string
+  profiles?: { full_name?: string | null; avatar_url?: string | null } | null
 }
 
 function normalizeSkill(s: string) {
@@ -19,11 +21,14 @@ export default function ProjectCard({
   project,
   index,
   userSkills,
+  currentUserId,
 }: {
   project: ProjectCardData
   index: number
   userSkills?: string[]
+  currentUserId?: string | null
 }) {
+  const { requestJoin, pending } = useJoinProject()
   const matchCount =
     userSkills && userSkills.length > 0
       ? project.required_skills?.filter((rs) =>
@@ -33,6 +38,8 @@ export default function ProjectCard({
 
   const isPerfectMatch =
     matchCount > 0 && project.required_skills && project.required_skills.length > 0
+
+  const isOwnProject = currentUserId && project.creator_id === currentUserId
 
   return (
     <motion.div
@@ -56,7 +63,18 @@ export default function ProjectCard({
             {project.title}
           </h3>
         </div>
-        <Link href={`/projects/${project.id}`} className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition-all">View</Link>
+        <div className="flex gap-2">
+          <Link href={`/projects/${project.id}`} className="px-4 py-2 border text-sm font-medium rounded-xl hover:bg-slate-50 transition-all">View</Link>
+          {!isOwnProject && currentUserId && project.creator_id ? (
+            <button
+              onClick={() => requestJoin(project.id, project.creator_id!)}
+              disabled={pending}
+              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-60"
+            >
+              {pending ? '...' : 'Join'}
+            </button>
+          ) : null}
+        </div>
       </div>
       <p className="text-slate-600 mb-6">{project.description}</p>
       <div className="flex flex-wrap gap-2 mb-8">

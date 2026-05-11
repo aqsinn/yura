@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
+import Avatar from '@/app/components/common/Avatar'
 
 export default async function ProfileViewPage({
   params,
@@ -43,21 +44,31 @@ export default async function ProfileViewPage({
       )}
       <div className="card p-8">
         <div className="flex justify-between items-start mb-6">
-          <div>
-            <h1 className="text-3xl font-semibold">{profile.full_name || 'Anonymous Student'}</h1>
-            {profile.headline && (
-              <p className="text-lg text-slate-600 mt-1">{profile.headline}</p>
-            )}
-            {profile.university && (
-              <p className="text-slate-500 mt-1">{profile.university}</p>
-            )}
+          <div className="flex items-center gap-4">
+            <Avatar src={profile.avatar_url} name={profile.full_name} size="xl" />
+            <div>
+              <h1 className="text-3xl font-semibold">{profile.full_name || 'Anonymous Student'}</h1>
+              {profile.headline && (
+                <p className="text-lg text-slate-600 mt-1">{profile.headline}</p>
+              )}
+              {profile.university && (
+                <p className="text-slate-500 mt-1">{profile.university}</p>
+              )}
+            </div>
           </div>
-          {isOwnProfile && (
+          {isOwnProfile ? (
             <Link
               href="/profile"
               className="px-4 py-2 rounded-xl border text-sm hover:bg-slate-50"
             >
               Edit Profile
+            </Link>
+          ) : (
+            <Link
+              href={`/chat?with=${id}`}
+              className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm hover:bg-indigo-700"
+            >
+              Message
             </Link>
           )}
         </div>

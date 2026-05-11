@@ -27,6 +27,7 @@ export async function updateProfile(formData: FormData) {
     bio: String(formData.get('bio') || ''),
     university: String(formData.get('university') || ''),
     skills,
+    avatar_url: String(formData.get('avatar_url') || '') || null,
   })
   if (profileError) redirect(`/profile?error=${encodeURIComponent(profileError.message)}`)
 
