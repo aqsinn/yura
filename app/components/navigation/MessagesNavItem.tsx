@@ -53,16 +53,15 @@ export default function MessagesNavItem() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
-        async (payload) => {
-          const {
-            data: { user },
-          } = await supabase.auth.getUser()
-          if (!user) return
-          const msg = payload.new as Record<string, string>
-          if (msg.sender_id === user.id) return
-
-          setUnreadCount((c) => c + 1)
-        }
+        // Re-fetch from DB rather than incrementing blindly — this ensures
+        // we only count messages in conversations the user is actually part of
+        () => fetchUnread()
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'messages' },
+        // Re-fetch when messages are marked as read (e.g. user opens the chat)
+        () => fetchUnread()
       )
       .subscribe()
 
