@@ -28,18 +28,17 @@ export default async function DiscoverPage({
     query = query.contains('skills', [skill.toLowerCase()])
   }
 
-  const { data: profiles } = await query
+  const { data: profiles, error } = await query
 
-  // Filter to show only profiles that have at least a name or some skills
-  const visibleProfiles = profiles?.filter(
-    (p) => p.full_name || (p.skills && p.skills.length > 0)
-  )
+  if (error) {
+    console.error('Error fetching profiles:', error)
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <h1 className="text-3xl font-semibold">Discover students</h1>
       <div className="grid gap-4 md:grid-cols-2">
-        {visibleProfiles?.length ? visibleProfiles.map((profile) => (
+        {profiles?.length ? profiles.map((profile) => (
           <div key={profile.id} className="card p-6">
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center gap-3">

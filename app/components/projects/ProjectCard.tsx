@@ -22,11 +22,15 @@ export default function ProjectCard({
   index,
   userSkills,
   currentUserId,
+  hasRequested,
+  hasJoined,
 }: {
   project: ProjectCardData
   index: number
   userSkills?: string[]
   currentUserId?: string | null
+  hasRequested?: boolean
+  hasJoined?: boolean
 }) {
   const { requestJoin, pending } = useJoinProject()
   const matchCount =
@@ -65,15 +69,24 @@ export default function ProjectCard({
         </div>
         <div className="flex gap-2">
           <Link href={`/projects/${project.id}`} className="px-4 py-2 border text-sm font-medium rounded-xl hover:bg-slate-50 transition-all">View</Link>
-          {!isOwnProject && currentUserId && project.creator_id ? (
-            <button
-              onClick={() => requestJoin(project.id, project.creator_id!)}
-              disabled={pending}
-              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-60"
-            >
-              {pending ? '...' : 'Join'}
-            </button>
-          ) : null}
+          
+          {!isOwnProject && currentUserId && project.creator_id && (
+            <>
+              {hasJoined ? (
+                <span className="px-4 py-2 bg-emerald-50 text-emerald-700 text-sm font-medium rounded-xl border border-emerald-100">Joined</span>
+              ) : hasRequested ? (
+                <span className="px-4 py-2 bg-amber-50 text-amber-700 text-sm font-medium rounded-xl border border-amber-100">Pending</span>
+              ) : (
+                <button
+                  onClick={() => requestJoin(project.id, project.creator_id!)}
+                  disabled={pending}
+                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-60"
+                >
+                  {pending ? '...' : 'Join'}
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
       <p className="text-slate-600 mb-6">{project.description}</p>

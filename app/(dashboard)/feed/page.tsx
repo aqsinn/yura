@@ -12,7 +12,7 @@ export default async function FeedPage({
 
   let query = supabase
     .from('projects')
-    .select('*, profiles:creator_id(full_name, avatar_url)')
+    .select('*, creator_id, profiles:creator_id(full_name, avatar_url)')
     .eq('status', 'open')
     .order('created_at', { ascending: false })
 
@@ -26,11 +26,21 @@ export default async function FeedPage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: profile } = user
-    ? await supabase.from('profiles').select('skills').eq('id', user.id).single()
-    : { data: null }
+  const [{ data: profile }, { data: userRequests }, { data: userMemberships }] = await Promise.all([
+    user
+      ? supabase.from('profiles').select('skills').eq('id', user.id).single()
+      : Promise.resolve({ data: null }),
+    user
+      ? supabase.from('offers').select('project_id, status').eq('sender_id', user.id)
+      : Promise.resolve({ data: [] }),
+    user
+      ? supabase.from('project_members').select('project_id').eq('profile_id', user.id)
+      : Promise.resolve({ data: [] }),
+  ])
 
   const userSkills: string[] = (profile?.skills as string[] | null) ?? []
+  const requestedProjectIds = new Set(userRequests?.map((r) => r.project_id) || [])
+  const joinedProjectIds = new Set(userMemberships?.map((m) => m.project_id) || [])
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -46,7 +56,15 @@ export default async function FeedPage({
       </div>
       <div className="grid grid-cols-1 gap-6">
         {projects?.length ? projects.map((project, i) => (
-          <ProjectCard key={project.id} project={project} index={i} userSkills={userSkills} currentUserId={user?.id} />
+          <ProjectCard
+            key={project.id}
+            project={project}
+            index={i}
+            userSkills={userSkills}
+            currentUserId={user?.id}
+            hasRequested={requestedProjectIds.has(project.id)}
+            hasJoined={joinedProjectIds.has(project.id)}
+          />
         )) : <div className="card p-8 text-slate-600">No projects yet. Create one to kick things off.</div>}
       </div>
     </div>

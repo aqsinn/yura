@@ -34,10 +34,23 @@ export default async function ProjectDetailPage({
   const isOwner = user?.id === project.creator_id
   const creator = project.creator as { id: string; full_name: string | null } | null
 
-  const { data: members } = await supabase
-    .from('project_members')
-    .select('profile_id, role, status, profiles(full_name)')
-    .eq('project_id', id)
+  const [{ data: members }, { data: existingOffer }] = await Promise.all([
+    supabase
+      .from('project_members')
+      .select('profile_id, role, status, profiles(full_name)')
+      .eq('project_id', id),
+    user
+      ? supabase
+          .from('offers')
+          .select('status')
+          .eq('project_id', id)
+          .eq('sender_id', user.id)
+          .single()
+      : Promise.resolve({ data: null }),
+  ])
+
+  const hasJoined = members?.some((m) => m.profile_id === user?.id)
+  const hasRequested = !!existingOffer
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -68,11 +81,25 @@ export default async function ProjectDetailPage({
           ))}
         </div>
         {!isOwner && user ? (
-          <form action={requestToJoinProject} className="mt-6">
-            <input type="hidden" name="project_id" value={project.id} />
-            <input type="hidden" name="owner_id" value={project.creator_id} />
-            <button className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm">Request to join</button>
-          </form>
+          <div className="mt-6">
+            {hasJoined ? (
+              <div className="px-6 py-3 bg-emerald-50 text-emerald-700 font-medium rounded-xl border border-emerald-200 inline-block">
+                You are a member
+              </div>
+            ) : hasRequested ? (
+              <div className="px-6 py-3 bg-amber-50 text-amber-700 font-medium rounded-xl border border-amber-200 inline-block">
+                Request Pending
+              </div>
+            ) : (
+              <form action={requestToJoinProject}>
+                <input type="hidden" name="project_id" value={project.id} />
+                <input type="hidden" name="owner_id" value={project.creator_id} />
+                <button className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-all">
+                  Request to join
+                </button>
+              </form>
+            )}
+          </div>
         ) : null}
       </div>
 

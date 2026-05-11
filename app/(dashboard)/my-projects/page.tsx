@@ -31,15 +31,42 @@ export default async function MyProjectsPage({
         .order('created_at', { ascending: false })
     : { data: [] }
 
-  const { data: requestsRaw } = user
-    ? await supabase
-        .from('offers')
-        .select('id,status,project_id,sender_id,projects(title),sender_profile:profiles!offers_sender_id_fkey(full_name)')
-        .eq('receiver_id', user.id)
-        .order('created_at', { ascending: false })
-    : { data: [] }
+  const [{ data: requestsRaw, error: requestsError }, { data: sentRequestsRaw }] = await Promise.all([
+    user
+      ? supabase
+          .from('offers')
+          .select(`
+            id,
+            status,
+            project_id,
+            sender_id,
+            projects(title),
+            sender_profile:profiles!sender_id(full_name)
+          `)
+          .eq('receiver_id', user.id)
+          .order('created_at', { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+    user
+      ? supabase
+          .from('offers')
+          .select(`
+            id,
+            status,
+            project_id,
+            projects(title),
+            receiver_profile:profiles!receiver_id(full_name)
+          `)
+          .eq('sender_id', user.id)
+          .order('created_at', { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+  ])
 
-  const joinRequests = (requestsRaw || []) as JoinRequest[]
+  if (requestsError) {
+    console.error('Error fetching incoming requests:', requestsError)
+  }
+
+  const joinRequests = (requestsRaw || []) as any[]
+  const sentRequests = (sentRequestsRaw || []) as any[]
 
   const pendingByProject: Record<string, number> = {}
   for (const r of joinRequests) {
@@ -82,15 +109,29 @@ export default async function MyProjectsPage({
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Join requests</h2>
+        <h2 className="text-xl font-semibold">Incoming requests</h2>
         <div className="grid gap-4">
           {joinRequests.length ? joinRequests.map((offer) => (
             <div key={offer.id} className="card p-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="font-medium">{offer.sender_profile?.[0]?.full_name || 'A student'} requested to join</p>
-                  <p className="text-slate-600 text-sm">Project: {offer.projects?.[0]?.title || 'Unknown project'}</p>
-                  <p className="text-slate-600 text-sm">Status: {offer.status}</p>
+                  <p className="font-medium">
+                    {(() => {
+                      const profile = Array.isArray(offer.sender_profile) 
+                        ? offer.sender_profile[0] 
+                        : offer.sender_profile;
+                      return profile?.full_name || 'A student';
+                    })()} requested to join
+                  </p>
+                  <p className="text-slate-600 text-sm">
+                    Project: {(() => {
+                      const proj = Array.isArray(offer.projects) 
+                        ? offer.projects[0] 
+                        : offer.projects;
+                      return proj?.title || 'Unknown project';
+                    })()}
+                  </p>
+                  <p className="text-slate-600 text-sm">Status: <span className="capitalize">{offer.status}</span></p>
                 </div>
                 {offer.status === 'pending' ? (
                   <div className="flex gap-2">
@@ -109,6 +150,39 @@ export default async function MyProjectsPage({
               </div>
             </div>
           )) : <div className="card p-8 text-slate-600">No incoming join requests yet.</div>}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-xl font-semibold">Sent by me</h2>
+        <div className="grid gap-4">
+          {sentRequests.length ? sentRequests.map((offer) => (
+            <div key={offer.id} className="card p-5">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="font-medium">You requested to join</p>
+                  <p className="text-slate-600 text-sm">
+                    Project: {(() => {
+                      const proj = Array.isArray(offer.projects) 
+                        ? offer.projects[0] 
+                        : offer.projects;
+                      return proj?.title || 'Unknown project';
+                    })()}
+                  </p>
+                  <p className="text-slate-600 text-sm">
+                    Owner: {(() => {
+                      const profile = Array.isArray(offer.receiver_profile) 
+                        ? offer.receiver_profile[0] 
+                        : offer.receiver_profile;
+                      return profile?.full_name || 'Project Owner';
+                    })()}
+                  </p>
+                  <p className="text-slate-600 text-sm">Status: <span className="capitalize">{offer.status}</span></p>
+                </div>
+                <Link href={`/projects/${offer.project_id}`} className="px-4 py-2 rounded-xl border text-sm text-center">View Project</Link>
+              </div>
+            </div>
+          )) : <div className="card p-8 text-slate-600">You have not sent any join requests yet.</div>}
         </div>
       </section>
     </div>
