@@ -46,6 +46,11 @@ drop policy if exists conversations_insert_self on public.conversations;
 create policy conversations_insert_self on public.conversations
   for insert with check (participant_a = auth.uid() or participant_b = auth.uid());
 
+-- Allows participants to update last_message_at
+drop policy if exists conversations_update_participants on public.conversations;
+create policy conversations_update_participants on public.conversations
+  for update using (participant_a = auth.uid() or participant_b = auth.uid());
+
 drop policy if exists messages_select_conversation_participants on public.messages;
 create policy messages_select_conversation_participants on public.messages
   for select using (
