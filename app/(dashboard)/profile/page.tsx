@@ -2,7 +2,12 @@ import { createClient } from '@/utils/supabase/server'
 import { updateProfile } from './actions'
 import TagInput from '@/app/components/common/TagInput'
 
-export default async function ProfilePage() {
+export default async function ProfilePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ saved?: string; error?: string }>
+}) {
+  const { saved, error } = await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -15,6 +20,16 @@ export default async function ProfilePage() {
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <h1 className="text-3xl font-semibold">Your profile</h1>
+      {saved ? (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 p-4">
+          Saved successfully.
+        </div>
+      ) : null}
+      {error ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 p-4 break-words">
+          {error}
+        </div>
+      ) : null}
       <form action={updateProfile} className="card p-8 space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Full name</label>

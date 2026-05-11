@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 
 export async function updateProfile(formData: FormData) {
@@ -9,7 +10,7 @@ export async function updateProfile(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) throw new Error('Unauthorized')
+  if (!user) redirect('/login')
 
   const skills = Array.from(
     new Set(
@@ -20,16 +21,17 @@ export async function updateProfile(formData: FormData) {
     )
   )
 
-  await supabase.from('profiles').upsert({
+  const { error: profileError } = await supabase.from('profiles').upsert({
     id: user.id,
     full_name: String(formData.get('full_name') || ''),
     bio: String(formData.get('bio') || ''),
     university: String(formData.get('university') || ''),
     skills,
   })
+  if (profileError) redirect(`/profile?error=${encodeURIComponent(profileError.message)}`)
 
   if (skills.length) {
-    await supabase.from('skills').upsert(
+    const { error: skillsError } = await supabase.from('skills').upsert(
       skills.map((slug) => ({
         slug,
         name: slug.replace(/(^\w|\s\w)/g, (c) => c.toUpperCase()),
@@ -37,21 +39,25 @@ export async function updateProfile(formData: FormData) {
       })),
       { onConflict: 'slug' }
     )
+    if (skillsError) redirect(`/profile?error=${encodeURIComponent(`Skills upsert failed: ${skillsError.message}`)}`)
   }
 
-  await supabase.from('profile_skills').delete().eq('profile_id', user.id)
+  const { error: deleteError } = await supabase.from('profile_skills').delete().eq('profile_id', user.id)
+  if (deleteError) redirect(`/profile?error=${encodeURIComponent(`Skills reset failed: ${deleteError.message}`)}`)
 
   if (skills.length) {
     const { data: skillRows } = await supabase.from('skills').select('id,slug').in('slug', skills)
     if (skillRows?.length) {
-      await supabase.from('profile_skills').insert(
+      const { error: insertError } = await supabase.from('profile_skills').insert(
         skillRows.map((skill) => ({
           profile_id: user.id,
           skill_id: skill.id,
         }))
       )
+      if (insertError) redirect(`/profile?error=${encodeURIComponent(`Skills link failed: ${insertError.message}`)}`)
     }
   }
 
   revalidatePath('/profile')
+  redirect('/profile?saved=1')
 }
