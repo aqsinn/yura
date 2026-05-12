@@ -22,10 +22,10 @@ export default function DismissibleBanner() {
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
               <div className="text-[13px] sm:text-sm font-bold truncate">
-                Premium plans are live: Starter ($5/mo) + Pro ($7/mo)
+               Be AlphaMaxed, Save 20% Every.Single.Year.
               </div>
               <div className="text-[11px] sm:text-xs text-indigo-100 truncate">
-                Featured badge, better matching, and boosts. Tap to view.
+                Featured badge, better matching, and boosts. Tap to view premium plans.
               </div>
             </div>
             
