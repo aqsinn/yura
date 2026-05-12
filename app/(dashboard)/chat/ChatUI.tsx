@@ -50,7 +50,10 @@ export default function ChatUI({
         },
         (payload) => {
           const newMsg = payload.new as Message
-          setMessages((prev) => [...prev, newMsg])
+          // Deduplicate: realtime may fire for our own sent message
+          setMessages((prev) =>
+            prev.some((m) => m.id === newMsg.id) ? prev : [...prev, newMsg]
+          )
         }
       )
       .subscribe()
@@ -105,6 +108,12 @@ export default function ChatUI({
         .single()
 
       if (sent) {
+        // Optimistically add — prevents first message from vanishing when
+        // the realtime subscription hasn't caught up to the new convId yet
+        setMessages((prev) =>
+          prev.some((m) => m.id === sent.id) ? prev : [...prev, sent]
+        )
+
         await supabase
           .from('conversations')
           .update({ last_message_at: new Date().toISOString() })
