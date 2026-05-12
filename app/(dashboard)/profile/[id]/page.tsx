@@ -116,6 +116,23 @@ export default async function ProfileViewPage({
         )}
       </div>
 
+      {isOwnProfile ? (
+        <Link
+          href="/profile#pricing"
+          className="block rounded-2xl border bg-gradient-to-r from-indigo-600 to-indigo-500 text-white p-6 shadow-lg shadow-indigo-200 hover:from-indigo-700 hover:to-indigo-600 transition-colors"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold">Upgrade to Premium</h2>
+              <p className="text-indigo-100">Unlock featured badges, AI matching, and unlimited reach.</p>
+            </div>
+            <span className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-indigo-600">
+              View plans
+            </span>
+          </div>
+        </Link>
+      ) : null}
+
       {projects?.length ? (
         <div className="card p-6">
           <h2 className="text-xl font-semibold mb-4">Projects</h2>
