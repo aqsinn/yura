@@ -69,12 +69,9 @@ export default async function FeedPage({
           >
             <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center gap-6">
-                <div className="rounded-2xl bg-white/20 p-4 backdrop-blur-md">
-                  <Sparkles className="h-8 w-8 text-white" />
-                </div>
                 <div>
                   <h3 className="text-2xl font-black">Boost your profile with AlphaMaxed</h3>
-                  <p className="text-indigo-100 text-lg">Get AI matching, featured badges, and unlimited project reach.</p>
+                  <p className="text-indigo-100 text-lg">Get Specialized matching, featured badges, and unlimited project reach.</p>
                 </div>
               </div>
               <span className="rounded-xl bg-white px-6 py-3 text-sm font-black uppercase tracking-widest text-indigo-600 transition-all group-hover:scale-105 group-hover:shadow-lg">

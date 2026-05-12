@@ -115,7 +115,7 @@ export default async function NotificationsPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <h1 className="text-3xl font-semibold">Signals</h1>
+      <h1 className="text-3xl font-semibold">Notifications</h1>
 
       {notifications.length === 0 && (
         <div className="card p-8 text-center text-slate-500">

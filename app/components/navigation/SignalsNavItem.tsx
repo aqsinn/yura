@@ -69,7 +69,7 @@ export default function SignalsNavItem() {
           </span>
         )}
       </div>
-      <span className="text-sm font-medium">Signals</span>
+      <span className="text-sm font-medium">Notifications</span>
     </Link>
   )
 }

@@ -25,7 +25,7 @@ export default function DismissibleBanner() {
                Be AlphaMaxed, Save 20% Every.Single.Year.
               </div>
               <div className="text-[11px] sm:text-xs text-indigo-100 truncate">
-                Featured badge, better matching, and boosts. Tap to view premium plans.
+                Featured badge, better matching, and boosts. Click for more.
               </div>
             </div>
             
