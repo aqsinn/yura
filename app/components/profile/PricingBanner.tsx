@@ -69,7 +69,7 @@ const tiers = [
       'Priority support',
       'Early access to features',
     ],
-    buttonText: 'Go Pro',
+    buttonText: 'AlphaMaxed',
     mostPopular: true,
     color: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
     badge: 'Premium',
