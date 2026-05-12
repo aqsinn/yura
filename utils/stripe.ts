@@ -1,13 +1,21 @@
 import Stripe from 'stripe'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set')
-}
+let stripeSingleton: Stripe | null = null
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2026-04-22.dahlia', // Use the version recommended by the environment
-  appInfo: {
-    name: 'Yura',
-    version: '0.1.0',
-  },
-})
+export function getStripe() {
+  if (stripeSingleton) return stripeSingleton
+  const secretKey = process.env.STRIPE_SECRET_KEY
+  if (!secretKey) {
+    throw new Error('STRIPE_SECRET_KEY is not set')
+  }
+
+  stripeSingleton = new Stripe(secretKey, {
+    apiVersion: '2026-04-22.dahlia',
+    appInfo: {
+      name: 'Yura',
+      version: '0.1.0',
+    },
+  })
+
+  return stripeSingleton
+}

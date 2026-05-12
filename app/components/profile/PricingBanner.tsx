@@ -4,6 +4,11 @@ import { useMemo, useState } from 'react'
 import { Check, Star, Rocket, Loader2 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
+type CheckoutTarget =
+  | { kind: 'price'; priceId: string }
+  | { kind: 'product'; productId: string }
+  | { kind: 'none' }
+
 const tiers = [
   {
     name: 'EcoUser',
@@ -28,9 +33,9 @@ const tiers = [
     name: 'SigmaPlus',
     id: 'tier-sigma',
     price: { monthly: '$5', yearly: '$48' },
-    priceIds: { 
-      monthly: process.env.NEXT_PUBLIC_STRIPE_SIGMA_MONTHLY_ID || 'price_sigma_monthly', 
-      yearly: process.env.NEXT_PUBLIC_STRIPE_SIGMA_YEARLY_ID || 'price_sigma_yearly' 
+    priceIds: {
+      monthly: process.env.NEXT_PUBLIC_STRIPE_SIGMA_MONTHLY_ID || '',
+      yearly: process.env.NEXT_PUBLIC_STRIPE_SIGMA_YEARLY_ID || '',
     },
     description: 'For active collaborators',
     features: [
@@ -50,9 +55,9 @@ const tiers = [
     name: 'AlphaMaxed',
     id: 'tier-alpha',
     price: { monthly: '$7', yearly: '$67' },
-    priceIds: { 
-      monthly: process.env.NEXT_PUBLIC_STRIPE_ALPHA_MONTHLY_ID || 'price_alpha_monthly', 
-      yearly: process.env.NEXT_PUBLIC_STRIPE_ALPHA_YEARLY_ID || 'price_alpha_yearly' 
+    priceIds: {
+      monthly: process.env.NEXT_PUBLIC_STRIPE_ALPHA_MONTHLY_ID || '',
+      yearly: process.env.NEXT_PUBLIC_STRIPE_ALPHA_YEARLY_ID || '',
     },
     description: 'For serious team leads',
     features: [
@@ -73,8 +78,13 @@ const tiers = [
 export default function PricingBanner() {
   const [isAnnual, setIsAnnual] = useState(false)
   const [loadingTier, setLoadingTier] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   const pricing = useMemo(() => {
+    const missingCheckoutKeys: string[] = []
+    if (!process.env.NEXT_PUBLIC_STRIPE_SIGMA_MONTHLY_ID) missingCheckoutKeys.push('NEXT_PUBLIC_STRIPE_SIGMA_MONTHLY_ID')
+    if (!process.env.NEXT_PUBLIC_STRIPE_ALPHA_MONTHLY_ID) missingCheckoutKeys.push('NEXT_PUBLIC_STRIPE_ALPHA_MONTHLY_ID')
+
     const saveByTierId = new Map<string, number>()
     for (const tier of tiers) {
       if (tier.id === 'tier-eco') continue
@@ -82,22 +92,38 @@ export default function PricingBanner() {
       const yearly = Number(tier.price.yearly.replace('$', ''))
       saveByTierId.set(tier.id, monthly * 12 - yearly)
     }
-    return { saveByTierId }
+    return { saveByTierId, missingCheckoutKeys }
   }, [])
+
+  const getCheckoutTarget = (tier: typeof tiers[0], annual: boolean): CheckoutTarget => {
+    const value = annual ? tier.priceIds.yearly : tier.priceIds.monthly
+    const fallback = tier.priceIds.monthly
+    const effectiveValue = value || fallback
+
+    if (!effectiveValue) return { kind: 'none' }
+    if (effectiveValue.startsWith('price_')) return { kind: 'price', priceId: effectiveValue }
+    if (effectiveValue.startsWith('prod_')) return { kind: 'product', productId: effectiveValue }
+    return { kind: 'none' }
+  }
 
   const handleCheckout = async (tier: typeof tiers[0]) => {
     if (tier.id === 'tier-eco') return
+    setCheckoutError(null)
+    const target = getCheckoutTarget(tier, isAnnual)
+    if (target.kind === 'none') return
 
     setLoadingTier(tier.id)
     try {
+      const interval = isAnnual ? 'year' : 'month'
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          priceId: isAnnual ? tier.priceIds.yearly : tier.priceIds.monthly,
-          isAnnual,
+          interval,
+          ...(target.kind === 'price' ? { priceId: target.priceId } : {}),
+          ...(target.kind === 'product' ? { productId: target.productId } : {}),
         }),
       })
 
@@ -106,12 +132,16 @@ export default function PricingBanner() {
         window.location.href = '/login'
         return
       }
-      if (!response.ok) return
+      if (!response.ok) {
+        setCheckoutError(typeof data?.message === 'string' ? data.message : null)
+        return
+      }
       if (data.url) {
         window.location.href = data.url
       }
     } catch (error) {
       console.error('Error initiating checkout:', error)
+      setCheckoutError('Checkout failed. Try again.')
     } finally {
       setLoadingTier(null)
     }
@@ -125,6 +155,24 @@ export default function PricingBanner() {
         <div className="absolute -left-24 -bottom-24 h-72 w-72 rounded-full bg-indigo-100/70 blur-3xl" />
 
         <div className="relative p-8 sm:p-10">
+          {pricing.missingCheckoutKeys.length ? (
+            <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900">
+              <div className="font-semibold">Payments are not configured yet</div>
+              <div className="text-sm text-amber-800">
+                Set your Stripe IDs (price_... or prod_...) in Vercel, then redeploy:
+              </div>
+              <div className="mt-2 text-xs font-mono text-amber-900 break-words">
+                {pricing.missingCheckoutKeys.join(' · ')}
+              </div>
+            </div>
+          ) : null}
+
+          {checkoutError ? (
+            <div className="mb-8 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-800">
+              {checkoutError}
+            </div>
+          ) : null}
+
           <div className="text-center mb-10">
             <h2 className="text-3xl font-extrabold text-slate-900 sm:text-4xl">
               Yura pricing
@@ -211,7 +259,11 @@ export default function PricingBanner() {
                 <button
                   type="button"
                   onClick={() => handleCheckout(tier)}
-                  disabled={loadingTier !== null || tier.id === 'tier-eco'}
+                  disabled={
+                    loadingTier !== null ||
+                    tier.id === 'tier-eco' ||
+                    getCheckoutTarget(tier, isAnnual).kind === 'none'
+                  }
                   className={cn(
                     "w-full py-3 px-6 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2",
                     tier.mostPopular
