@@ -17,50 +17,36 @@ function tierFromPriceId(priceId: string): string {
   return 'free'
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('stripe_customer_id')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile?.stripe_customer_id) {
-      return NextResponse.json({ error: 'No Stripe customer found' }, { status: 404 })
-    }
-
+    const { sessionId } = await req.json()
     const stripe = getStripe()
 
-    // Get the most recent active subscription for this customer
-    const subscriptions = await stripe.subscriptions.list({
-      customer: profile.stripe_customer_id,
-      status: 'active',
-      limit: 1,
+    // Retrieve the exact checkout session Stripe redirected from
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['subscription'],
     })
 
-    if (!subscriptions.data.length) {
-      // Try trialing too
-      const trialing = await stripe.subscriptions.list({
-        customer: profile.stripe_customer_id,
-        status: 'trialing',
-        limit: 1,
-      })
-      if (!trialing.data.length) {
-        return NextResponse.json({ tier: 'free' })
-      }
-      subscriptions.data.push(...trialing.data)
+    // Verify this session belongs to the logged-in user
+    if (session.metadata?.userId !== user.id) {
+      return NextResponse.json({ error: 'Session mismatch' }, { status: 403 })
     }
 
-    const sub = subscriptions.data[0]
-    const priceId = sub.items.data[0].price.id
-    const tier = tierFromPriceId(priceId)
-    const periodEnd = (sub as any).current_period_end
+    if (session.payment_status !== 'paid' && session.status !== 'complete') {
+      return NextResponse.json({ tier: 'free', status: session.payment_status })
+    }
 
-    // Update both tables immediately — no webhook needed
+    const sub = session.subscription as any
+    if (!sub) return NextResponse.json({ tier: 'free' })
+
+    const priceId = sub.items?.data?.[0]?.price?.id
+    const tier = tierFromPriceId(priceId)
+    const periodEnd = sub.current_period_end
+
     await Promise.all([
       supabaseAdmin.from('profiles').update({ tier }).eq('id', user.id),
       supabaseAdmin.from('subscriptions').upsert({
@@ -68,13 +54,16 @@ export async function POST() {
         stripe_subscription_id: sub.id,
         status: sub.status,
         price_id: priceId,
-        current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : new Date().toISOString(),
+        current_period_end: periodEnd
+          ? new Date(periodEnd * 1000).toISOString()
+          : new Date().toISOString(),
       }),
     ])
 
     return NextResponse.json({ tier })
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'
+    console.error('[confirm-payment]', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

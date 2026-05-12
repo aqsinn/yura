@@ -9,7 +9,6 @@ import { updateProfile } from './actions'
 import { Pencil, School, Check, X, ShieldCheck, Crown, Flame, Loader2 } from 'lucide-react'
 
 type UserTier = 'free' | 'starter' | 'pro' | 'premium' | 'sigma' | 'alpha'
-
 type DefaultValues = {
   full_name?: string | null
   bio?: string | null
@@ -33,13 +32,19 @@ export default function ProfileForm({
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    if (searchParams.get('success') !== 'true') return
+    const sessionId = searchParams.get('session_id')
+    const isSuccess = searchParams.get('success') === 'true'
+    if (!isSuccess || !sessionId) return
 
     setActivating(true)
 
-    const confirm = async () => {
+    const confirm = async (attempt = 1) => {
       try {
-        const res = await fetch('/api/confirm-payment', { method: 'POST' })
+        const res = await fetch('/api/confirm-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        })
         const data = await res.json()
 
         if (data.tier && data.tier !== 'free') {
@@ -49,16 +54,13 @@ export default function ProfileForm({
           return
         }
 
-        // Stripe sub not ready yet — retry once after 3s
-        setTimeout(async () => {
-          try {
-            const res2 = await fetch('/api/confirm-payment', { method: 'POST' })
-            const data2 = await res2.json()
-            if (data2.tier) setLiveValues(prev => ({ ...prev, tier: data2.tier }))
-          } catch {}
+        // Stripe session not fully committed yet — retry up to 3x with 2s gaps
+        if (attempt < 3) {
+          setTimeout(() => confirm(attempt + 1), 2000)
+        } else {
           setActivating(false)
           router.replace('/profile', { scroll: false })
-        }, 3000)
+        }
       } catch {
         setActivating(false)
         router.refresh()
