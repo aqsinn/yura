@@ -21,11 +21,17 @@ export async function POST(req: Request) {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     )
-  } catch (err: any) {
-    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return new NextResponse(`Webhook Error: ${message}`, { status: 400 })
   }
 
   const session = event.data.object as Stripe.Checkout.Session
+  const getCurrentPeriodEndSeconds = (value: unknown) => {
+    if (!value || typeof value !== 'object') return null
+    const seconds = (value as { current_period_end?: unknown }).current_period_end
+    return typeof seconds === 'number' ? seconds : null
+  }
 
   if (event.type === 'checkout.session.completed') {
     const subscriptionId = session.subscription as string
@@ -50,7 +56,7 @@ export async function POST(req: Request) {
         stripe_subscription_id: subscription.id,
         status: subscription.status,
         price_id: priceId,
-        current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
+        current_period_end: new Date((getCurrentPeriodEndSeconds(subscription) ?? 0) * 1000).toISOString(),
       })
     }
   }
@@ -67,7 +73,7 @@ export async function POST(req: Request) {
     if (subData) {
       await supabaseAdmin.from('subscriptions').update({
         status: subscription.status,
-        current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
+        current_period_end: new Date((getCurrentPeriodEndSeconds(subscription) ?? 0) * 1000).toISOString(),
       }).eq('stripe_subscription_id', subscription.id)
 
       if (subscription.status === 'canceled' || subscription.status === 'unpaid') {

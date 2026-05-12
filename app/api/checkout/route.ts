@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 
 export async function POST(req: Request) {
   try {
-    const { priceId, isAnnual } = await req.json()
+    const { priceId } = await req.json()
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 

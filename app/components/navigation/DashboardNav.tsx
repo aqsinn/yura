@@ -1,10 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-
-import { Bell, Zap } from 'lucide-react'
-
-import { LayoutGrid, SquarePlus, User } from 'lucide-react'
+import { LayoutGrid, SquarePlus, User, Zap } from 'lucide-react'
 
 import MyProjectsNavItem from '@/app/components/navigation/MyProjectsNavItem'
 import MessagesNavItem from '@/app/components/navigation/MessagesNavItem'
@@ -14,7 +11,7 @@ const staticNavItems = [
   { name: 'Feed', href: '/feed', icon: LayoutGrid },
   { name: 'Create', href: '/projects/create', icon: SquarePlus },
   { name: 'Profile', href: '/profile', icon: User },
-  { name: 'Upgrade', href: '/profile#pricing', icon: Zap, highlight: true },
+  { name: 'Upgrade', href: '/pricing', icon: Zap, highlight: true },
 ]
 
 export default function DashboardNav() {

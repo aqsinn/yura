@@ -102,6 +102,10 @@ export default function PricingBanner() {
       })
 
       const data = await response.json().catch(() => null)
+      if (response.status === 401) {
+        window.location.href = '/login'
+        return
+      }
       if (!response.ok) return
       if (data.url) {
         window.location.href = data.url

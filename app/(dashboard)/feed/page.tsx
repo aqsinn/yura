@@ -51,7 +51,7 @@ export default async function FeedPage({
       
       {userTier === 'free' && (
         <Link 
-          href="/profile#pricing" 
+          href="/pricing" 
           className="group relative block overflow-hidden rounded-2xl bg-indigo-600 p-6 text-white transition-all hover:bg-indigo-700 shadow-lg shadow-indigo-200"
         >
           <div className="flex items-center justify-between relative z-10">

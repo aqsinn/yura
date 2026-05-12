@@ -118,7 +118,7 @@ export default async function ProfileViewPage({
 
       {isOwnProfile ? (
         <Link
-          href="/profile#pricing"
+          href="/pricing"
           className="block rounded-2xl border bg-gradient-to-r from-indigo-600 to-indigo-500 text-white p-6 shadow-lg shadow-indigo-200 hover:from-indigo-700 hover:to-indigo-600 transition-colors"
         >
           <div className="flex items-center justify-between gap-4">
