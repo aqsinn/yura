@@ -12,7 +12,7 @@ export function getStripe() {
 
 
   stripeSingleton = new Stripe(secretKey, {
-    apiVersion: '2025-12-25.clover', 
+   apiVersion: '2026-04-22.dahlia' as any,
     appInfo: {
       name: 'Yura',
       version: '0.1.0',
