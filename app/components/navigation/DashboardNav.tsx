@@ -10,7 +10,7 @@ const staticNavItems = [
   { name: 'Feed', href: '/feed', icon: LayoutGrid },
   { name: 'Create', href: '/projects/create', icon: SquarePlus },
   { name: 'Profile', href: '/profile', icon: User },
-  { name: 'Upgrade', href: '/pricing', icon: Zap, highlight: true },
+  { name: 'Upgrade', href: '/pricing', icon: Zap},
 ]
 
 export default function DashboardNav() {
@@ -20,11 +20,7 @@ export default function DashboardNav() {
         <Link
           key={item.name}
           href={item.href}
-          className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${
-            item.highlight 
-              ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200' 
-              : 'text-slate-600 hover:text-indigo-700 hover:bg-indigo-50'
-          }`}
+          className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all`}
         >
           <item.icon size={20} />
           <span className="text-sm font-medium">{item.name}</span>
