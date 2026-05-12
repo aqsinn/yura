@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import ProfileForm from './ProfileForm'
-import PricingBanner from '@/app/components/profile/PricingBanner'
+
 
 export default async function ProfilePage({
   searchParams,
@@ -43,10 +43,7 @@ export default async function ProfilePage({
         </div>
       ) : null}
 
-      <section id="pricing" className="scroll-mt-24">
-        <PricingBanner />
-      </section>
-
+     
       <section className="max-w-3xl mx-auto space-y-4">
         <h2 className="text-xl font-semibold">Edit profile</h2>
         {user && profile && <ProfileForm defaultValues={profile} />}

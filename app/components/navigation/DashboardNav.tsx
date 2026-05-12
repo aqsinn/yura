@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { LayoutGrid, SquarePlus, User, Zap } from 'lucide-react'
-
 import MyProjectsNavItem from '@/app/components/navigation/MyProjectsNavItem'
 import MessagesNavItem from '@/app/components/navigation/MessagesNavItem'
 import SignalsNavItem from '@/app/components/navigation/SignalsNavItem'
