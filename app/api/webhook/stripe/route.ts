@@ -1,4 +1,4 @@
-
+//app/api/webhook/stripe/route.ts
 import { NextResponse } from 'next/server'
 import { getStripe } from '@/utils/stripe'
 import { createClient } from '@supabase/supabase-js'

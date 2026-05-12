@@ -42,7 +42,7 @@ const tiers = [
       '15 active projects',
       'Unlimited requests',
       'Priority in smart matching',
-      'Skill analytics ✅',
+      'Skill analytics ',
       'Project boost (1/mo)',
       'Featured profile badge',
     ],
