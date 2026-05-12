@@ -47,7 +47,7 @@ export default async function ProfilePage({
         )}
       </div>
 
-      <div id="pricing" className="border-t border-gray-800 pt-12">
+      <div id="pricing" className="border-t border-slate-200 pt-12">
         <PricingBanner />
       </div>
     </div>
