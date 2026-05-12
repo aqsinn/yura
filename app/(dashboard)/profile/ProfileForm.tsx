@@ -13,16 +13,25 @@ export default function ProfileForm({
     university?: string | null
     skills?: string[]
     avatar_url?: string | null
+    tier?: string
   }
 }) {
   return (
     <form action={updateProfile} className="card p-8 space-y-4">
-      <div>
-        <label className="block text-sm font-medium mb-1">Profile photo</label>
-        <AvatarUploadField
-          defaultUrl={defaultValues.avatar_url}
-          name="avatar_url"
-        />
+      <div className="flex justify-between items-start">
+        <div>
+          <label className="block text-sm font-medium mb-1">Profile photo</label>
+          <AvatarUploadField
+            defaultUrl={defaultValues.avatar_url}
+            name="avatar_url"
+          />
+        </div>
+        <div className="text-right">
+          <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">Current Plan</span>
+          <div className="mt-1 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-sm font-bold border border-indigo-100 capitalize">
+            {defaultValues.tier || 'free'}
+          </div>
+        </div>
       </div>
       <div>
         <label className="block text-sm font-medium mb-1">Full name</label>
