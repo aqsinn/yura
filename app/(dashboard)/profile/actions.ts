@@ -1,25 +1,17 @@
+// app/(dashboard)/profile/actions.ts
 'use server'
-
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const skills = Array.from(
-    new Set(
-      String(formData.get('skills') || '')
-        .split(',')
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean)
-    )
-  )
+  const skills = Array.from(new Set(
+    String(formData.get('skills') || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+  ))
 
   const { error: profileError } = await supabase.from('profiles').upsert({
     id: user.id,
@@ -33,11 +25,7 @@ export async function updateProfile(formData: FormData) {
 
   if (skills.length) {
     const { error: skillsError } = await supabase.from('skills').upsert(
-      skills.map((slug) => ({
-        slug,
-        name: slug.replace(/(^\w|\s\w)/g, (c) => c.toUpperCase()),
-        category: 'engineering',
-      })),
+      skills.map(slug => ({ slug, name: slug.replace(/(^\w|\s\w)/g, c => c.toUpperCase()), category: 'engineering' })),
       { onConflict: 'slug' }
     )
     if (skillsError) redirect(`/profile?error=${encodeURIComponent(`Skills upsert failed: ${skillsError.message}`)}`)
@@ -50,10 +38,7 @@ export async function updateProfile(formData: FormData) {
     const { data: skillRows } = await supabase.from('skills').select('id,slug').in('slug', skills)
     if (skillRows?.length) {
       const { error: insertError } = await supabase.from('profile_skills').insert(
-        skillRows.map((skill) => ({
-          profile_id: user.id,
-          skill_id: skill.id,
-        }))
+        skillRows.map(skill => ({ profile_id: user.id, skill_id: skill.id }))
       )
       if (insertError) redirect(`/profile?error=${encodeURIComponent(`Skills link failed: ${insertError.message}`)}`)
     }
@@ -62,5 +47,5 @@ export async function updateProfile(formData: FormData) {
   revalidatePath('/profile')
   revalidatePath(`/profile/${user.id}`)
   revalidatePath('/discover')
-  redirect(`/profile/${user.id}?saved=1`)
+  redirect(`/profile?saved=true`)
 }

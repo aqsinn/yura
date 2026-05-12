@@ -1,3 +1,4 @@
+// app/(dashboard)/profile/[id]/page.tsx
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
@@ -13,21 +14,13 @@ export default async function ProfileViewPage({
   const { id } = await params
   const { saved } = await searchParams
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', id)
-    .single()
-
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', id).single()
   if (!profile) return notFound()
 
   const isOwnProfile = user?.id === id
 
-  // Get projects created by this user
   const { data: projects } = await supabase
     .from('projects')
     .select('id, title, description, status')
@@ -42,32 +35,23 @@ export default async function ProfileViewPage({
           Profile saved successfully.
         </div>
       )}
+
       <div className="card p-8">
         <div className="flex justify-between items-start mb-6">
           <div className="flex items-center gap-4">
             <Avatar src={profile.avatar_url} name={profile.full_name} size="xl" />
             <div>
               <h1 className="text-3xl font-semibold">{profile.full_name || 'Anonymous Student'}</h1>
-              {profile.headline && (
-                <p className="text-lg text-slate-600 mt-1">{profile.headline}</p>
-              )}
-              {profile.university && (
-                <p className="text-slate-500 mt-1">{profile.university}</p>
-              )}
+              {profile.headline && <p className="text-lg text-slate-600 mt-1">{profile.headline}</p>}
+              {profile.university && <p className="text-slate-500 mt-1">{profile.university}</p>}
             </div>
           </div>
           {isOwnProfile ? (
-            <Link
-              href="/profile"
-              className="px-4 py-2 rounded-xl border text-sm hover:bg-slate-50"
-            >
+            <Link href="/profile" className="px-4 py-2 rounded-xl border text-sm hover:bg-slate-50">
               Edit Profile
             </Link>
           ) : (
-            <Link
-              href={`/chat?with=${id}`}
-              className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm hover:bg-indigo-700"
-            >
+            <Link href={`/chat?with=${id}`} className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm hover:bg-indigo-700">
               Message
             </Link>
           )}
@@ -85,12 +69,7 @@ export default async function ProfileViewPage({
             <h2 className="text-sm font-medium text-slate-500 mb-2">Skills</h2>
             <div className="flex flex-wrap gap-2">
               {profile.skills.map((skill: string) => (
-                <span
-                  key={skill}
-                  className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm"
-                >
-                  {skill}
-                </span>
+                <span key={skill} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm">{skill}</span>
               ))}
             </div>
           </div>
@@ -101,22 +80,14 @@ export default async function ProfileViewPage({
             <h2 className="text-sm font-medium text-slate-500 mb-2">Portfolio</h2>
             <div className="flex flex-wrap gap-2">
               {profile.portfolio_links.map((link: string) => (
-                <a
-                  key={link}
-                  href={link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-indigo-600 hover:underline text-sm"
-                >
-                  {link}
-                </a>
+                <a key={link} href={link} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline text-sm">{link}</a>
               ))}
             </div>
           </div>
         )}
       </div>
 
-      {isOwnProfile ? (
+      {isOwnProfile && (
         <Link
           href="/pricing"
           className="block rounded-2xl border bg-gradient-to-r from-indigo-600 to-indigo-500 text-white p-6 shadow-lg shadow-indigo-200 hover:from-indigo-700 hover:to-indigo-600 transition-colors"
@@ -126,23 +97,17 @@ export default async function ProfileViewPage({
               <h2 className="text-xl font-bold">Upgrade to Premium</h2>
               <p className="text-indigo-100">Unlock featured badges, and unlimited reach.</p>
             </div>
-            <span className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-indigo-600">
-              View plans
-            </span>
+            <span className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-indigo-600">View plans</span>
           </div>
         </Link>
-      ) : null}
+      )}
 
       {projects?.length ? (
         <div className="card p-6">
           <h2 className="text-xl font-semibold mb-4">Projects</h2>
           <div className="space-y-3">
-            {projects.map((project) => (
-              <Link
-                key={project.id}
-                href={`/projects/${project.id}`}
-                className="block p-4 border rounded-xl hover:bg-slate-50 transition-colors"
-              >
+            {projects.map(project => (
+              <Link key={project.id} href={`/projects/${project.id}`} className="block p-4 border rounded-xl hover:bg-slate-50 transition-colors">
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="font-medium">{project.title}</h3>
