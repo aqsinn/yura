@@ -42,7 +42,6 @@ export default async function ProfilePage({
       )}
 
       <section className="max-w-3xl mx-auto space-y-4">
-        <h2 className="text-xl font-semibold">Edit profile</h2>
         {user && profile && <ProfileForm defaultValues={profile} userId={user.id} />}
       </section>
     </div>
