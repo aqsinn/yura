@@ -3,9 +3,18 @@ import { NextResponse } from 'next/server'
 import { getStripe } from '@/utils/stripe'
 import { createClient } from '@/utils/supabase/server'
 
+const VALID_TIERS = ['starter', 'pro', 'sigma', 'alpha'] as const
+type PaidTier = typeof VALID_TIERS[number]
+
 export async function POST(req: Request) {
   try {
-    const { productId, interval } = await req.json()
+    const { productId, interval, tier } = await req.json()
+
+    // Validate tier is a known paid tier
+    if (!VALID_TIERS.includes(tier as PaidTier)) {
+      return NextResponse.json({ error: `Invalid tier: ${tier}` }, { status: 400 })
+    }
+
     const stripe = getStripe()
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -29,7 +38,6 @@ export async function POST(req: Request) {
         metadata: { supabaseUUID: user.id },
       })
       customerId = customer.id
-      // Use update (not upsert) to avoid overwriting other profile columns
       await supabase.from('profiles').update({ stripe_customer_id: customerId }).eq('id', user.id)
     }
 
@@ -38,15 +46,16 @@ export async function POST(req: Request) {
       customer: customerId,
       line_items: [{ price: price.id, quantity: 1 }],
       mode: 'subscription',
-      // {CHECKOUT_SESSION_ID} is a Stripe template variable replaced with the real id on redirect
       success_url: `${origin}/profile?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/profile?canceled=true`,
-      metadata: { userId: user.id },
+      // Store BOTH userId and tier — confirm-payment reads these directly, no env var matching needed
+      metadata: { userId: user.id, tier },
     })
 
     return NextResponse.json({ url: session.url })
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Internal Server Error'
+    console.error('[checkout]', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
