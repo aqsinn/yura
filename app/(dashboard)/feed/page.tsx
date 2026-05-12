@@ -1,3 +1,4 @@
+//app/(dashboard)/feed/page.tsx
 import { createClient } from '@/utils/supabase/server'
 import ProjectCard from '@/app/components/projects/ProjectCard'
 import MessagesWidget from '@/app/components/messaging/MessagesWidget'
