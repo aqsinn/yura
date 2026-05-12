@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { LayoutGrid, SquarePlus, Bell, User } from 'lucide-react'
+import { LayoutGrid, SquarePlus, Bell, User, Zap } from 'lucide-react'
 import MyProjectsNavItem from '@/app/components/navigation/MyProjectsNavItem'
 import MessagesNavItem from '@/app/components/navigation/MessagesNavItem'
 
@@ -10,6 +10,7 @@ const staticNavItems = [
   { name: 'Create', href: '/projects/create', icon: SquarePlus },
   { name: 'Signals', href: '/notifications', icon: Bell },
   { name: 'Profile', href: '/profile', icon: User },
+  { name: 'Upgrade', href: '/profile#pricing', icon: Zap, highlight: true },
 ]
 
 export default function DashboardNav() {
@@ -19,7 +20,11 @@ export default function DashboardNav() {
         <Link
           key={item.name}
           href={item.href}
-          className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 transition-all"
+          className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${
+            item.highlight 
+              ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200' 
+              : 'text-slate-600 hover:text-indigo-700 hover:bg-indigo-50'
+          }`}
         >
           <item.icon size={20} />
           <span className="text-sm font-medium">{item.name}</span>
