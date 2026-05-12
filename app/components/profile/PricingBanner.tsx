@@ -25,7 +25,7 @@ const tiers = [
       'Smart matching',
       'Portfolio export',
     ],
-    buttonText: 'Get started',
+    buttonText: 'Free to use!',
     mostPopular: false,
     color: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
     badge: 'EcoUser',
