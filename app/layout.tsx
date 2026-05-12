@@ -29,10 +29,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {/* Global Banner */}
         <DismissibleBanner />
-        
-        {/* Main Content */}
         <main className="flex-1">
           {children}
         </main>
