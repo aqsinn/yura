@@ -121,12 +121,12 @@ export default function PricingBanner() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          interval,
-          ...(target.kind === 'price' ? { priceId: target.priceId } : {}),
-          ...(target.kind === 'product' ? { productId: target.productId } : {}),
-        }),
-      })
+body: JSON.stringify({
+  interval,
+  tier: tier.id === 'tier-sigma' ? 'sigma' : 'alpha',
+  ...(target.kind === 'price' ? { priceId: target.priceId } : {}),
+  ...(target.kind === 'product' ? { productId: target.productId } : {}),
+}),
 
       const data = await response.json().catch(() => null)
       if (response.status === 401) {
