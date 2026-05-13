@@ -127,6 +127,7 @@ body: JSON.stringify({
   ...(target.kind === 'price' ? { priceId: target.priceId } : {}),
   ...(target.kind === 'product' ? { productId: target.productId } : {}),
 }),
+              })
 
       const data = await response.json().catch(() => null)
       if (response.status === 401) {
